@@ -28,7 +28,7 @@ devtools::install_github("hoyiwan/fastfocal")
 
 ## 🛠️ Example Usage
 
-### 🔁 Focal (Moving Window) Statistics with `fast_focal()`
+### 🔁 Focal (Moving Window) Statistics with `fastfocal()`
 
 ```r
 library(terra)
@@ -39,10 +39,10 @@ r <- rast(matrix(runif(100), nrow = 10), extent = ext(0, 1000, 0, 1000))
 crs(r) <- "EPSG:32610"  # UTM projection (meters)
 
 # 1. Apply focal mean using a circular window with 500 m radius
-out_500 <- fast_focal(r, window_size = 500, stat = "mean", shape = "circle")
+out_500 <- fastfocal(r, window_size = 500, stat = "mean", shape = "circle")
 
 # 2. Apply focal standard deviation using circular windows with radii of 100, 500, and 1000 meters
-out_multi <- fast_focal(r, window_size = c(100, 500, 1000), stat = "sd", shape = "circle")
+out_multi <- fastfocal(r, window_size = c(100, 500, 1000), stat = "sd", shape = "circle")
 
 # Plot one of the results
 plot(out_multi[[2]])  # e.g., result for 500m
