@@ -28,29 +28,31 @@ devtools::install_github("hoyiwan/fastfocal")
 
 ## 🛠️ Example Usage
 
-### 🔁 Focal (Moving Window) Statistics
+### 🔁 Focal (Moving Window) Statistics with `fast_focal()`
 
 ```r
 library(terra)
 library(fastfocal)
 
-# Load or create a raster
-r <- rast(matrix(1:100, nrow = 10))
+# Load or create a raster with a projected CRS (units in meters)
+r <- rast(matrix(runif(100), nrow = 10), extent = ext(0, 1000, 0, 1000))
+crs(r) <- "EPSG:32610"  # UTM projection (meters)
 
-# Apply focal mean using a 3x3 window
-out1 <- fast_focal(r, window_size = 3, stat = "mean")
+# 1. Apply focal mean using a circular window with 500 m radius
+out_500 <- fast_focal(r, window_size = 500, stat = "mean", shape = "circle")
 
-# Run across multiple scales (e.g., 3x3, 5x5, 7x7)
-scales <- c(3, 5, 7)
-out_stack <- focal_multi(r, scales = scales, stat = "sd")
+# 2. Apply focal standard deviation using circular windows with radii of 100, 500, and 1000 meters
+out_multi <- fast_focal(r, window_size = c(100, 500, 1000), stat = "sd", shape = "circle")
 
-# Plot result
-plot(out1)
+# Plot one of the results
+plot(out_multi[[2]])  # e.g., result for 500m
 ```
+
+> 💡 `window_size` is in **map units** (e.g., meters). Provide multiple values to apply focal stats at multiple spatial scales. `shape = "circle"` by default, can also use `"square"`.
 
 ---
 
-### 📍 Extraction with `fastextract()`
+## 📍 Extraction with `fastextract()`
 
 ```r
 # Load point data (SpatVector or sf)
@@ -63,7 +65,7 @@ out_points <- fastextract(raster_stack, pts, stat = "mean")
 out_buffers <- fastextract(raster_stack, pts, scales = c(500, 1000), stat = "mean")
 ```
 
-> 💡 `scales` defines buffer radii in map units. If omitted, extraction is done at point locations only.
+> 💡 By default, `fastextract()` extracts values at point locations. Set `scales` to extract using buffer zones (in map units).
 
 ---
 
@@ -75,13 +77,13 @@ This package is licensed under the [GNU General Public License v3.0](https://www
 
 ## 🤝 Contributing
 
-Bug reports, feature suggestions, and contributions are welcome!
+Bug reports, feature suggestions, and contributions are welcome!  
 Please open an [Issue](https://github.com/hoyiwan/fastfocal/issues) or submit a pull request.
 
 ---
 
 ## 📫 Author
 
-**Ho Yi Wan**
-Associate Professor, University of Florida
+**Ho Yi Wan**  
+Associate Professor, University of Florida  
 📧 hoyiwan@gmail.com
