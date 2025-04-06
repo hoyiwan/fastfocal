@@ -1,16 +1,19 @@
 Package: fastfocal
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Fast Multi-Scale Focal and Extraction Functions for Raster Data
 Version: 0.1.0
-Authors@R: c(
-    person(
-      "Jane", "Doe",
-      email = "jane@example.com",
-      role = c("aut", "cre")
-    )
-  )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Authors@R: c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
+Description: Fast and flexible moving window and buffer-based raster extraction
+    at user-defined spatial scales. Supports various focal statistics and
+    point-based or buffer-based extraction using sf or terra.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    terra, 
+    sf, 
+    Rcpp,
+    progressr
+LinkingTo: Rcpp

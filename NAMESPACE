@@ -1,1 +1,5 @@
-exportPattern("^[[:alpha:]]+")
+export(fastextract)
+export(fastfocal)
+
+importFrom(Rcpp, evalCpp)
+useDynLib(fastfocal, .registration = TRUE)
