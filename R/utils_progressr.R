@@ -1,5 +1,6 @@
 #' Set the best available progressr handler
 #' @keywords internal
+#' @noRd
 set_fastfocal_progress_handler <- function() {
   if (!requireNamespace("progressr", quietly = TRUE)) return()
   
