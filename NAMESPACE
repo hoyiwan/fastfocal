@@ -1,5 +1,3 @@
 export(fastextract)
 export(fastfocal)
-
-importFrom(Rcpp, evalCpp)
-useDynLib(fastfocal, .registration = TRUE)
+export(fastfocal_weights)

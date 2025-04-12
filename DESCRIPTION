@@ -2,6 +2,7 @@ Package: fastfocal
 Type: Package
 Title: Fast Multi-Scale Focal and Extraction Functions for Raster Data
 Version: 0.1.0
+Date: 2025-04-12
 Authors@R: c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
 Description: Fast and flexible moving window and buffer-based raster extraction
     at user-defined spatial scales. Supports various focal statistics and
@@ -14,6 +15,11 @@ RoxygenNote: 7.3.2
 Imports: 
     terra, 
     sf, 
-    Rcpp,
     progressr
-LinkingTo: Rcpp
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
+URL: https://github.com/hoyiwan/fastfocal
+BugReports: https://github.com/hoyiwan/fastfocal/issues

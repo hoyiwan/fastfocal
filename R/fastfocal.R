@@ -1,47 +1,103 @@
-#' Fast moving window (focal) statistics using circular, rectangular, or Gaussian kernels
+#' Fast focal smoothing with FFT auto-switching
 #'
-#' @param r SpatRaster. Single- or multi-layer raster.
-#' @param stat Character. Summary statistic: "mean", "sd", "min", "max", "median", "range", "sum", "p25", "p75".
-#' @param radius Numeric. Radius (in map units) for the moving window.
-#' @param na.rm Logical. Whether to ignore NA values in the window.
-#' @param window Character. Window shape: "circular", "rectangular", "gaussian".
-#' @return SpatRaster with focal values for each layer
+#' Applies a focal smoothing operation to a SpatRaster using either a C++ (via terra) or FFT backend.
+#' Supports a range of window types including rectangle, circle, gaussian, pareto, idw, and exponential.
+#'
+#' @param x SpatRaster. Input raster layer or multi-layer stack.
+#' @param d Numeric. Radius or size of the smoothing window (in map units).
+#' @param w Character. Type of window: "rectangle", "circle", "gaussian", "pareto", "idw", or "exponential".
+#' @param fun Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "range", "median", "mode", "p25", or "p75".
+#' @param engine Character. Either "auto" (default), "cpp", or "fft" to choose backend.
+#' @param na.rm Logical. Remove NAs before applying function.
+#' @param ... Additional arguments passed to terra::focal if using C++ backend.
+#'
+#' @return A SpatRaster of the same dimensions as `x`, containing the focal-smoothed values.
 #' @export
-fastfocal <- function(r, stat = "mean", radius = 1, na.rm = TRUE,
-                      window = c("circular", "rectangular", "gaussian")) {
-  stopifnot(inherits(r, "SpatRaster"))
-  window <- match.arg(window)
+#'
+#' @examples
+#' r <- rast(matrix(runif(100), 10, 10))
+#' fastfocal(r, d = 3, w = "gaussian", fun = "mean")
+fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm = TRUE, ...) {
+  stopifnot(inherits(x, "SpatRaster"))
   
-  if (terra::nlyr(r) > 1) {
-    cli::cli_warn("Multi-layer input detected. This may take longer to compute.")
+  # Valid kernel names
+  valid_windows <- c("rectangle", "circle", "circular", "gaussian", "Gauss", "pareto", "idw",
+                     "exponential", "triangular", "cosine", "logistic", "cauchy", "quartic", "epanechnikov")
+  
+  # Capture and check unexpected arguments
+  dots <- list(...)
+  
+  # Common argument mistakes and their suggested corrections
+  arg_suggestions <- c(
+    "window" = "w",
+    "windows" = "w",
+    "kernel" = "w",
+    "kernels" = "w",
+    "radius" = "d",
+    "function" = "fun",
+    "stat" = "fun"
+  )
+  
+  # Loop over the supplied arguments and issue warnings if any are mistyped
+  for (arg in names(dots)) {
+    if (arg %in% names(arg_suggestions)) {
+      warning(sprintf("Unrecognized argument '%s'. Did you mean '%s'?", arg, arg_suggestions[[arg]]))
+    }
   }
   
-  ext <- terra::ext(r)
-  res <- terra::res(r)
-  ncell <- terra::ncell(r)
-  
-  xy <- terra::xyFromCell(r, 1:ncell)
-  pts <- terra::vect(xy, type = "points", crs = terra::crs(r))
-  
-  layer_names <- names(r)
-  if (is.null(layer_names)) {
-    layer_names <- paste0("lyr", seq_len(terra::nlyr(r)))
+  # Validate
+  if (!(w %in% valid_windows)) {
+    stop("Invalid window type: '", w, "'. Must be one of: ",
+         paste(valid_windows, collapse = ", "))
   }
   
-  vals <- fastextract(r, pts, stat = stat, scales = radius,
-                      na.rm = na.rm, window = window)
-  
-  # Turn matrix into a SpatRaster with 1+ layers
-  layers <- list()
-  for (i in seq_len(ncol(vals))) {
-    m <- matrix(vals[, i], nrow = terra::nrow(r), ncol = terra::ncol(r), byrow = TRUE)
-    rr <- terra::rast(m)
-    terra::ext(rr) <- ext
-    terra::crs(rr) <- terra::crs(r)
-    names(rr) <- colnames(vals)[i]
-    layers[[i]] <- rr
+  # Handle multi-layer input
+  if (terra::nlyr(x) > 1) {
+    out_list <- lapply(1:terra::nlyr(x), function(i) {
+      xi <- x[[i]]
+      out_i <- fastfocal(xi, d = d, w = w, fun = fun, engine = engine, na.rm = na.rm, ...)
+      names(out_i) <- names(x)[i]
+      return(out_i)
+    })
+    out <- do.call(c, out_list)
+    return(out)
   }
   
-  out <- do.call(c, layers)
-  return(out)
+  # Auto-select engine
+  if (engine == "auto") {
+    engine <- choose_engine(x, d, fun = fun)
+  }
+  
+  # Normalize kernel for mean and sum only
+  normalize_kernel <- (fun %in% c("mean"))
+  kernel <- fastfocal_weights(x = x, d = d, w = w, normalize = normalize_kernel)
+  
+  if (engine == "fft") {
+    if (interactive()) cat("Using FFT backend\\n")
+    
+    mat <- matrix(terra::values(x), nrow = terra::nrow(x), ncol = terra::ncol(x), byrow = TRUE)
+    
+    if (fun == "mean") {
+      fft_mat <- fft_convolve(mat, kernel, fun = "mean", na.rm = na.rm)
+    } else if (fun == "sum") {
+      kernel <- fastfocal_weights(x = x, d = d, w = w, normalize = na.rm)
+      fft_mat <- fft_convolve(mat, kernel, fun = "sum", na.rm = na.rm)
+    } else {
+      stop("Only 'mean' and 'sum' are supported by the FFT backend. Use engine = 'cpp' for other functions.")
+    }
+    
+    out <- terra::rast(x)
+    terra::values(out) <- as.vector(fft_mat)
+    names(out) <- paste0("focal_", fun)
+    return(out)
+    
+  } else if (engine == "cpp") {
+    if (interactive()) cat("Using terra::focal backend\\n")
+    
+    fun_eval <- .makeTextFun(fun)
+    return(terra::focal(x, w = kernel, fun = fun_eval, na.rm = na.rm, ...))
+    
+  } else {
+    stop("Unsupported engine: must be 'auto', 'fft', or 'cpp'")
+  }
 }

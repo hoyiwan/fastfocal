@@ -1,80 +1,60 @@
-#' Fast extraction from raster at point locations or buffer scales
+#' Fast raster extraction at points (buffered)
 #'
-#' @param r SpatRaster. Raster with one or more layers.
-#' @param pts SpatVector or sf. Point locations.
-#' @param stat Character. Summary statistic (e.g., "mean", "min", "max", "sd", "sum").
-#' @param scales Numeric. Buffer radii in meters. Default is 0 (point extraction).
-#' @param na.rm Logical. Whether to ignore NA values. Default is TRUE.
-#' @param window Character. Window shape: "circular" (default), "rectangular", or "gaussian".
+#' Extracts summary statistics from a SpatRaster at point locations,
+#' optionally using buffered extraction with custom kernel windows.
 #'
-#' @return Matrix of extracted values: rows = points, cols = layers × scales
+#' @param x SpatRaster. Input raster.
+#' @param y SpatVector. Points, polygons, etc.
+#' @param d Numeric or vector. Buffer radius/radii in map units.
+#' @param w Character. Window type for kernel: "circle", "rectangle", etc.
+#' @param fun Character or function. Summary function: "mean", "sum", "min", "max", "sd", "median".
+#' @param na.rm Logical. Whether to remove NAs.
+#'
+#' @return A data.frame of extracted values, one row per point per scale.
 #' @export
-#' @useDynLib fastfocal, .registration = TRUE
-#' @importFrom Rcpp evalCpp
-fastextract <- function(r, pts, stat = "mean", scales = 0, na.rm = TRUE,
-                        window = c("circular", "rectangular", "gaussian")) {
-  window <- match.arg(window)
+fastextract <- function(x, y, d = 0, w = "circle", fun = "mean", na.rm = TRUE) {
+  if (!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
+  if (!inherits(y, "SpatVector")) stop("y must be a SpatVector")
   
-  if (inherits(pts, "sf")) pts <- terra::vect(pts)
-  stopifnot(inherits(pts, "SpatVector"))
-  stopifnot(terra::geomtype(pts) == "points")
-  
-  layer_names <- names(r)
-  if (is.null(layer_names)) {
-    layer_names <- paste0("lyr", seq_len(terra::nlyr(r)))
+  if (length(d) > 1) {
+    out_list <- lapply(d, function(di) {
+      df <- fastextract(x, y, d = di, w = w, fun = fun, na.rm = na.rm)
+      if ("ID" %in% names(df)) {
+        df <- df[, !(names(df) %in% "ID"), drop = FALSE]
+      }
+      df$scale_m <- di
+      df <- df[, c("scale_m", setdiff(names(df), "scale_m"))]
+      return(df)
+    })
+    return(do.call(rbind, out_list))
+  }
+  if (geomtype(y)[1] == "polygons") {
+    # Special case: user supplied a polygon layer
+    df <- terra::extract(x, y, fun = match.fun(fun), na.rm = na.rm, ID = TRUE)
+    
+    } else if (!is.null(d) && d > 0) {
+      buff <- terra::buffer(y, width = d)
+      df <- terra::extract(x, buff, fun = match.fun(fun), na.rm = na.rm)
+    
+      } else {
+        df <- terra::extract(x, y)[, -1, drop = FALSE]  # drop ID
+        fun_eval <- switch(
+          tolower(fun),
+          mean   = base::mean,
+          sum    = base::sum,
+          min    = base::min,
+          max    = base::max,
+          sd     = stats::sd,
+          median = stats::median,
+          stop("Unsupported summary function: ", fun)
+          )
+    
+    # Apply summary function per row, per column
+    df <- as.data.frame(t(apply(df, 1, function(row) {
+      vapply(row, function(x) fun_eval(x, na.rm = na.rm), numeric(1))
+    })))
+    names(df) <- names(x)
   }
   
-  # Fast path: point-only
-  if (all(scales == 0)) {
-    mats <- lapply(1:terra::nlyr(r), function(i) terra::as.matrix(r[[i]], wide = TRUE))
-    coords <- terra::crds(pts)
-    ext <- terra::ext(r)
-    res <- terra::res(r)
-    
-    out <- fastextract_multi_cpp(mats, coords,
-                                 x_coords = c(ext[1]),
-                                 y_coords = c(ext[3]),
-                                 res_x = c(res[1]),
-                                 res_y = c(res[2]),
-                                 na_rm = na.rm)
-    colnames(out) <- paste0(layer_names, "_s0")
-    return(out)
-  }
-  
-  # Buffer-based extraction path
-  vals_list <- list()
-  set_fastfocal_progress_handler()
-  
-  progressr::with_progress({
-    p <- progressr::progressor(steps = length(scales))
-    
-    for (s in scales) {
-      mats <- lapply(1:terra::nlyr(r), function(i) terra::as.matrix(r[[i]], wide = TRUE))
-      coords <- terra::crds(pts)
-      ext <- terra::ext(r)
-      res <- terra::res(r)
-      
-      out <- lapply(seq_along(mats), function(j) {
-        fastextract_buffer_cpp(
-          mat = mats[[j]],
-          coords = coords,
-          x_min = ext[1],
-          y_min = ext[3],
-          res_x = res[1],
-          res_y = res[2],
-          radius = s,
-          stat = stat,
-          na_rm = na.rm,
-          window = window
-        )
-      })
-      
-      out_mat <- do.call(cbind, out)
-      colnames(out_mat) <- paste0(layer_names, "_s", s)
-      vals_list[[as.character(s)]] <- out_mat
-      p()
-    }
-  })
-  
-  return(do.call(cbind, unname(vals_list)))
+  return(df)
 }

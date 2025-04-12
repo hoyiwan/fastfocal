@@ -2,30 +2,33 @@
 % Please edit documentation in R/fastfocal.R
 \name{fastfocal}
 \alias{fastfocal}
-\title{Fast moving window (focal) statistics using circular, rectangular, or Gaussian kernels}
+\title{Fast focal smoothing with FFT auto-switching}
 \usage{
-fastfocal(
-  r,
-  stat = "mean",
-  radius = 1,
-  na.rm = TRUE,
-  window = c("circular", "rectangular", "gaussian")
-)
+fastfocal(x, d, w = "circle", fun = "mean", engine = "auto", na.rm = TRUE, ...)
 }
 \arguments{
-\item{r}{SpatRaster. Single- or multi-layer raster.}
+\item{x}{SpatRaster. Input raster layer or multi-layer stack.}
 
-\item{stat}{Character. Summary statistic: "mean", "sd", "min", "max", "median", "range", "sum", "p25", "p75".}
+\item{d}{Numeric. Radius or size of the smoothing window (in map units).}
 
-\item{radius}{Numeric. Radius (in map units) for the moving window.}
+\item{w}{Character. Type of window: "rectangle", "circle", "gaussian", "pareto", "idw", or "exponential".}
 
-\item{na.rm}{Logical. Whether to ignore NA values in the window.}
+\item{fun}{Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "range", "median", "mode", "p25", or "p75".}
 
-\item{window}{Character. Window shape: "circular", "rectangular", "gaussian".}
+\item{engine}{Character. Either "auto" (default), "cpp", or "fft" to choose backend.}
+
+\item{na.rm}{Logical. Remove NAs before applying function.}
+
+\item{...}{Additional arguments passed to terra::focal if using C++ backend.}
 }
 \value{
-SpatRaster with focal values for each layer
+A SpatRaster of the same dimensions as \code{x}, containing the focal-smoothed values.
 }
 \description{
-Fast moving window (focal) statistics using circular, rectangular, or Gaussian kernels
+Applies a focal smoothing operation to a SpatRaster using either a C++ (via terra) or FFT backend.
+Supports a range of window types including rectangle, circle, gaussian, pareto, idw, and exponential.
+}
+\examples{
+r <- rast(matrix(runif(100), 10, 10))
+fastfocal(r, d = 3, w = "gaussian", fun = "mean")
 }

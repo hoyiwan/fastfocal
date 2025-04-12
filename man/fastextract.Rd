@@ -2,33 +2,27 @@
 % Please edit documentation in R/fastextract.R
 \name{fastextract}
 \alias{fastextract}
-\title{Fast extraction from raster at point locations or buffer scales}
+\title{Fast raster extraction at points (buffered)}
 \usage{
-fastextract(
-  r,
-  pts,
-  stat = "mean",
-  scales = 0,
-  na.rm = TRUE,
-  window = c("circular", "rectangular", "gaussian")
-)
+fastextract(x, y, d = 0, w = "circle", fun = "mean", na.rm = TRUE)
 }
 \arguments{
-\item{r}{SpatRaster. Raster with one or more layers.}
+\item{x}{SpatRaster. Input raster.}
 
-\item{pts}{SpatVector or sf. Point locations.}
+\item{y}{SpatVector. Points, polygons, etc.}
 
-\item{stat}{Character. Summary statistic (e.g., "mean", "min", "max", "sd", "sum").}
+\item{d}{Numeric or vector. Buffer radius/radii in map units.}
 
-\item{scales}{Numeric. Buffer radii in meters. Default is 0 (point extraction).}
+\item{w}{Character. Window type for kernel: "circle", "rectangle", etc.}
 
-\item{na.rm}{Logical. Whether to ignore NA values. Default is TRUE.}
+\item{fun}{Character or function. Summary function: "mean", "sum", "min", "max", "sd", "median".}
 
-\item{window}{Character. Window shape: "circular" (default), "rectangular", or "gaussian".}
+\item{na.rm}{Logical. Whether to remove NAs.}
 }
 \value{
-Matrix of extracted values: rows = points, cols = layers × scales
+A data.frame of extracted values, one row per point per scale.
 }
 \description{
-Fast extraction from raster at point locations or buffer scales
+Extracts summary statistics from a SpatRaster at point locations,
+optionally using buffered extraction with custom kernel windows.
 }
