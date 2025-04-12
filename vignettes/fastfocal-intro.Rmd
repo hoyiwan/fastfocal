@@ -48,6 +48,19 @@ This vignette walks through the core functionality through simulated ecological 
 
 ---
 
+## Installation and load packages
+
+```{r}
+# run:
+# install.packages("devtools")
+# devtools::install_github("hoyiwan/fastfocal")
+
+# load packages
+library(fastfocal)
+library(terra)
+
+```
+
 ## 🌿 Simulating Rasters for This Vignette
 
 To get started, we'll generate three example rasters with values resembling common ecological variables. In practice, users can replace these with their own data — `fastfocal` works seamlessly with any `SpatRaster` layers.
