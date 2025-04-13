@@ -1,76 +1,111 @@
+# fastfocal <img src="https://raw.githubusercontent.com/hoyiwan/fastfocal/main/man/figures/logo.png" align="right" height="120" />
 
-# fastfocal
+[![CRAN Status](https://www.r-pkg.org/badges/version/fastfocal)](https://CRAN.R-project.org/package=fastfocal)
+[![R-CMD-check](https://github.com/hoyiwan/fastfocal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hoyiwan/fastfocal/actions)
 
-**fastfocal** is an R package for high-performance, multi-scale raster processing. It provides:
+**fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)**
 
-- ⚡️ Fast raster extraction at point locations or buffer radii
-- 🔁 Fast moving window statistics (focal operations)
-- 🧠 Support for multiple window shapes: `circular`, `rectangular`, `gaussian`
-- 📐 Handles rasters with multiple layers
-- 📊 Progress bar and flexible NA handling
-- 💻 Powered by C++ for serious performance
+`fastfocal` provides high-performance, flexible raster smoothing and extraction functions in R using moving windows, buffer-based zones, and an auto-switching FFT backend for large kernels. It supports multiple focal statistics and allows users to work at multiple spatial scales with ease.
 
 ---
 
-## Installation
+## 🚀 Installation
+
+Install the released version from [CRAN](https://cran.r-project.org/package=fastfocal):
 
 ```r
-# From GitHub
-devtools::install_github("hoyiwan/fastfocal")
+install.packages("fastfocal")
+```
+
+Or install the development version from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("hoyiwan/fastfocal")
 ```
 
 ---
 
-## Example: Point Extraction
+## 📦 Overview
+
+This package includes:
+
+- `fastfocal()` — fast moving window smoothing with support for mean, sum, min, max, sd, and median
+- `fastextract()` — fast extraction of raster values at point or buffer locations
+- `fastfocal_weights()` — utility for generating spatial weight matrices (circular, Gaussian, etc.)
+- Auto-switch backend to FFT for large windows to improve performance
+- Native support for `terra::SpatRaster` and `sf` objects
+
+---
+
+## 🔧 Example Usage
 
 ```r
 library(fastfocal)
 library(terra)
 
-# Create raster and points
-r <- rast(matrix(1:100, 10, 10))
-ext(r) <- c(0, 10, 0, 10)
-pts <- vect(matrix(c(1,1, 5,5, 9,9), ncol=2, byrow=TRUE), type="points")
+# Create a dummy raster
+r <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
+values(r) <- runif(ncell(r))
 
-# Extract raster values at point and buffer scales
-fastextract(r, pts, stat = "mean", scales = c(0, 2), na.rm = TRUE)
+# Apply fast focal smoothing with circular window of radius 300
+smoothed <- fastfocal(r, d = 300, w = "circle", fun = "mean")
+
+# Plot the result
+plot(smoothed)
 ```
 
----
-
-## Example: Moving Window Focal Statistics
+Or for weighted extraction at points:
 
 ```r
-# Apply mean filter with circular window of 2 meters
-f1 <- fastfocal(r, stat = "mean", radius = 2)
+library(sf)
 
-# Apply Gaussian-weighted median
-f2 <- fastfocal(r, stat = "median", radius = 3, window = "gaussian")
+# Sample points
+pts <- st_as_sf(data.frame(x = c(500, 1500), y = c(500, 2500)), coords = c("x", "y"), crs = crs(r))
+
+# Extract raster values in 500m buffers around points
+result <- fastextract(r, pts, d = 500, fun = "mean")
+print(result)
 ```
 
 ---
 
-## Supported Options
+## 📖 Vignette
 
-| Feature         | Options                                                                 |
-|----------------|-------------------------------------------------------------------------|
-| **Functions**   | `fastextract()`, `fastfocal()`                                          |
-| **Stats**       | `"mean"`, `"min"`, `"max"`, `"sd"`, `"sum"`, `"median"`, `"range"`, `"p25"`, `"p75"` |
-| **Windows**     | `"circular"` (default), `"rectangular"`, `"gaussian"`                  |
-| **NA Handling** | `na.rm = TRUE` (default) or `FALSE`                                    |
-| **Multi-layer** | ✅ Supported                                                           |
-| **Progress bar**| ✅ Enabled automatically via `progressr`                               |
+A full introduction is available in the package vignette:
 
----
+```r
+vignette("index", package = "fastfocal")
+```
 
-## Author
-
-Ho Yi Wan  
-Associate Professor, University of Florida  
-📫 hoyiwan@gmail.com
+Or browse it online: [📘 Vignette on GitHub](https://github.com/hoyiwan/fastfocal/blob/main/vignettes/index.Rmd)
 
 ---
 
-## License
+## 📄 License
 
-GPL-3
+This package is licensed under **GPL-3**.
+
+---
+
+## 📚 Citation
+
+If you use `fastfocal` in published work, please cite it using:
+
+```r
+citation("fastfocal")
+```
+
+---
+
+## 🛠️ Author
+
+**Ho Yi Wan**   
+
+📧 hoyiwan@gmail.com
+
+---
+
+## 🙌 Acknowledgments
+
+Built to support large-scale ecological analysis, high-performance raster processing, and reproducible landscape research workflows.

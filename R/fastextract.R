@@ -11,7 +11,11 @@
 #' @param na.rm Logical. Whether to remove NAs.
 #'
 #' @return A data.frame of extracted values, one row per point per scale.
+#' 
 #' @export
+#' 
+#' @importFrom terra rast res values nrow ncol nlyr focal buffer extract vect geomtype
+#' @importFrom stats median sd
 fastextract <- function(x, y, d = 0, w = "circle", fun = "mean", na.rm = TRUE) {
   if (!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
   if (!inherits(y, "SpatVector")) stop("y must be a SpatVector")

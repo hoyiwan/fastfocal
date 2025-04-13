@@ -1,0 +1,213 @@
+---
+title: "fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)"
+subtitle: "Version 0.1.0 (2025)"
+author: "Ho Yi Wan"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteTangle{index.R}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = TRUE,
+  fig.width = 6,
+  fig.height = 4,
+  out.width="100%"
+)
+library(terra)
+library(fastfocal)
+```
+
+## What is `fastfocal`?
+
+Welcome! I created the `fastfocal` R package (Wan 2025) because I do a lot of multi-scale ecological modeling, which requires applying focal statistics at various spatial scales. As rasters and kernels grow larger, traditional methods quickly become painfully slow — and I couldn’t find a solution that was both fast and flexible.
+
+So I built one.
+
+If you’ve landed here, chances are you’ve run into the same problem: you need to perform spatial smoothing or buffer-based extraction across large rasters or at multiple scales, and existing tools just aren’t fast or friendly enough. That’s exactly the need `fastfocal` was built to solve.
+
+The `fastfocal` R package is designed for **high-performance focal and buffer-based raster processing**. It provides intuitive and fast **multi-layer aware** moving window operations and point-based extraction, with support for a rich variety of **kernel shapes**. Crucially, it automatically switches to **Fast Fourier Transform (FFT)** to optimize performance, dramatically accelerating large-kernel operations.Built on the `terra` framework, `fastfocal` works seamlessly with `SpatRaster` and `SpatVector` objects. It streamlines buffer extraction into a single-step function with **on-the-fly kernel generation**, so users can focus on analysis rather than boilerplate setup.
+
+This vignette walks through the core functionality through simulated ecological raster layers and step-by-step examples. We highlight how `fastfocal()` and `fastextract()` offer smooth multi-scale analysis with flexible kernel definitions and performance-tuned design.
+
+---
+
+## 🌟 Key Features
+
+- **Multi-layer raster support**: Apply focal operations across stacked rasters without manual iteration.
+- **Flexible kernels**: Choose from 10+ window types (e.g., circle, Gaussian, logistic, quartic).
+- **Map unit radius (in meters)**: Specify smoothing or extraction radius directly in meters.
+- **Point-based extraction**: Extract raster summaries at points with optional buffer windows.
+- **FFT backend**: Automatically switches to fast Fourier transform for large kernels.
+- **Identical geometry output**: Outputs maintain resolution, extent, and CRS of the input.
+
+---
+
+## Installation and load packages
+
+```{r}
+# run:
+# install.packages("devtools")
+# devtools::install_github("hoyiwan/fastfocal")
+
+# load packages
+library(fastfocal)
+library(terra)
+
+```
+
+## 🌿 Simulating Rasters for This Vignette
+
+To get started, we'll generate three example rasters with values resembling common ecological variables. In practice, users can replace these with their own data — `fastfocal` works seamlessly with any `SpatRaster` layers.
+
+```{r simulate-coarse-fine}
+# create random rasters
+set.seed(888)
+ndvi_coarse  <- rast(matrix(runif(100, 0.1, 0.9), 10, 10)) # Simulate NDVI values (0.1 - 0.9)
+slope_coarse <- rast(matrix(rbeta(100, 2, 5) * 40, 10, 10)) # simulate slope values (0 - 40 degrees)
+temp_coarse  <- rast(matrix(seq(12, 24, length.out = 100) + rnorm(100, 0, 1), 10, 10)) # simulate temperature values with a gentle gradient + random noise
+
+# Disaggregate each raster to make them look more natural
+ndvi  <- disagg(ndvi_coarse, fact = 10, method = "bilinear")
+slope <- disagg(slope_coarse, fact = 10, method = "bilinear")
+temp  <- disagg(temp_coarse, fact = 10, method = "bilinear")
+
+# Set extent to 3km × 3km for all layers (in projected units, e.g., meters)
+ext(ndvi) <- ext(0, 3000, 0, 3000)
+ext(slope) <- ext(ndvi)
+ext(temp) <- ext(ndvi)
+crs(ndvi) <- "EPSG:32611" # Assign UTM coordinate system (Zone 11N) to all layers
+crs(slope) <- crs(ndvi)
+crs(temp) <- crs(ndvi)
+
+# Combine layers into a multi-layer SpatRaster stack and name them
+r <- c(ndvi, slope, temp)
+names(r) <- c("ndvi", "slope", "temp")
+
+# plot
+plot(r)
+```
+
+## 📍 Point & Buffer-Based Extraction Example
+
+Here we'll use `fastextract` to extract values at a few points, then show how easy it is to pull in stats from buffers of different sizes — all in one step.
+
+For this vignette, we simulate 3 points as an example. In practice, users can simply provide their own points or polygons as a `SpatVector`.
+
+```{r simulate-points}
+# simulate points
+pts <- vect(matrix(c(500,500, 1500,1500, 2500,2500), ncol=2, byrow=TRUE), type="points", crs=crs(r))
+
+# plot
+par(mfrow = c(2, 2))
+plot(r[[1]], main = "NDVI"); plot(pts, add = TRUE, pch = 20, cex = 2)
+plot(r[[2]], main = "Slope"); plot(pts, add = TRUE, pch = 20, cex = 2)
+plot(r[[3]], main = "Temp");  plot(pts, add = TRUE, pch = 20, cex = 2)
+par(mfrow = c(1, 1))
+```
+
+```{r extract}
+# extract
+fastextract(r, pts)  # defaults to d = 0 → extract at the point
+fastextract(r, pts, d = c(0, 100, 500))  # multiple distances
+fastextract(r, pts, d = c(0, 100, 500, 1000), w = "gaussian", fun = "sd")
+```
+
+## 🔁 Moving-window analysis
+
+Finally, the fun part! 
+
+We'll apply `fastfocal()` to our rasters and run moving-window stats across the whole stack using different kernels and summary functions. You’ll see how easy it is to explore multi-layer patterns with just a couple lines of code.
+
+```{r focal}
+# Compute focal means using a circular window (300m radius)
+f_circ <- fastfocal(r, d = 300, w = "circle", fun = "mean")
+
+# Compute focal means using a Gaussian window (300m radius)
+f_gaus <- fastfocal(r, d = 300, w = "gaussian", fun = "mean")
+
+# plot
+par(mfrow = c(3, 3), mar = c(2, 2, 2, 2))
+plot(r[[1]], main = "NDVI");  plot(f_circ[[1]], main = "NDVI - Circle");  plot(f_gaus[[1]], main = "NDVI - Gaussian")
+plot(r[[2]], main = "Slope"); plot(f_circ[[2]], main = "Slope - Circle"); plot(f_gaus[[2]], main = "Slope - Gaussian")
+plot(r[[3]], main = "Temp");  plot(f_circ[[3]], main = "Temp - Circle");  plot(f_gaus[[3]], main = "Temp - Gaussian")
+par(mfrow = c(1, 1))
+```
+
+Let's see how different stats look like on the same layer!
+
+```{r multi-stat}
+# Compute different focal stats while holding the scale constant
+f_mean <- fastfocal(r, d = 300, fun = "mean", na.rm = TRUE)
+f_sd <- fastfocal(r, d = 300, fun = "sd", na.rm = TRUE)
+f_median <- fastfocal(r, d = 300, fun = "median", na.rm = TRUE)
+
+# plot
+par(mfrow = c(2, 2))
+plot(r[[1]], main = "NDVI")
+plot(f_mean[[1]], main = "NDVI - Mean (300m)")
+plot(f_sd[[1]], main = "NDVI - SD (300m)")
+plot(f_median[[1]], main = "NDVI - Median (300m)")
+par(mfrow = c(1, 1))
+```
+
+## 🪟 Visualize Supported Kernels / Window Types
+
+Curious what each kernel actually looks like? This section visualizes all the built-in window types supported by `fastfocal_weights()`. From sharp-edged circles to smooth tapers and heavy-tailed decay functions, each one defines how values are weighted across space during focal operations. Seeing them side-by-side makes it easier to choose the right kernel for your analysis.
+
+The plot below shows each kernel shape, centered on a dummy raster with 30m resolution. The values are padded for contrast and normalized for consistent color scaling.
+
+```{r visualize-kernels}
+# simulate kernels
+center_r <- rast(ext(0, 90, 0, 90), resolution = 30, crs = "EPSG:32611")
+kernel_types <- c("circle", "rectangle", "gaussian", "pareto", "idw", "exponential",
+                  "triangular", "cosine", "logistic", "cauchy", "quartic", "epanechnikov")
+
+pad_kernel <- function(k, pad = 20) {
+  nr <- nrow(k); nc <- ncol(k)
+  out <- matrix(0, nrow = nr + 2 * pad, ncol = nc + 2 * pad)
+  out[(pad + 1):(pad + nr), (pad + 1):(pad + nc)] <- k
+  return(out)
+}
+
+# plot
+par(mfrow = c(3, 4), mar = c(2, 2, 2, 2))
+for (w in kernel_types) {
+  k_raw <- fastfocal_weights(center_r, d = 1000, w = w, normalize = FALSE)
+  k_pad <- pad_kernel(k_raw, pad = 20)
+  k <- k_pad / max(k_pad, na.rm = TRUE)
+  image(k, main = w, col = hcl.colors(20, "YlOrRd", rev = TRUE), zlim = c(0, 1), asp = 1, cex.main = 1.5)
+}
+par(mfrow = c(1, 1))
+```
+
+## 🧠 Notes
+
+- Multi-layer support is now fully built into `fastfocal()`
+- Input can be a single-layer raster or a stack
+- Output preserves layer names and returns a `SpatRaster` with the same geometry
+- Kernel size `d` is in **map units** (e.g., meters)
+- Kernels were visualized using a center-pixel matrix to show their spatial shape
+
+## 📋 Session Info
+
+```{r}
+sessionInfo()
+```
+
+## 📚 Citation
+
+To cite the `fastfocal` package in publications, use:
+
+Wan, H.Y. (2025). fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT. R package version X.X.X. https://github.com/hoyiwan/fastfocal
+
+```{r}
+citation("fastfocal")
+
+```

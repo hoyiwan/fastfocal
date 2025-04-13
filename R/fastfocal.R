@@ -5,18 +5,30 @@
 #'
 #' @param x SpatRaster. Input raster layer or multi-layer stack.
 #' @param d Numeric. Radius or size of the smoothing window (in map units).
-#' @param w Character. Type of window: "rectangle", "circle", "gaussian", "pareto", "idw", or "exponential".
-#' @param fun Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "range", "median", "mode", "p25", or "p75".
+#' @param w Character. Type of window: one of
+#'   "rectangle", "circle", "gaussian", "pareto", "idw", "exponential",
+#'   "triangular", "cosine", "logistic", "cauchy", "quartic", or "epanechnikov".
+#' @param fun Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "median".
 #' @param engine Character. Either "auto" (default), "cpp", or "fft" to choose backend.
 #' @param na.rm Logical. Remove NAs before applying function.
-#' @param ... Additional arguments passed to terra::focal if using C++ backend.
+#' @param ... Additional arguments passed to [terra::focal()] if using the C++ backend.
 #'
-#' @return A SpatRaster of the same dimensions as `x`, containing the focal-smoothed values.
+#' @return A [terra::SpatRaster] of the same dimensions as `x`, containing the focal-smoothed values.
+#'
 #' @export
 #'
+#' @importFrom terra rast res values nrow ncol nlyr focal buffer extract vect geomtype
+#' @importFrom graphics image
+#' @importFrom grDevices hcl.colors
+#' @importFrom stats fft median sd
+#' 
 #' @examples
-#' r <- rast(matrix(runif(100), 10, 10))
-#' fastfocal(r, d = 3, w = "gaussian", fun = "mean")
+#' library(terra)
+#' x <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
+#' values(x) <- runif(ncell(x))
+#' result <- fastfocal(x, d = 300, w = "circle", fun = "mean")
+#' plot(result)
+
 fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm = TRUE, ...) {
   stopifnot(inherits(x, "SpatRaster"))
   
@@ -94,7 +106,7 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
   } else if (engine == "cpp") {
     if (interactive()) cat("Using terra::focal backend\\n")
     
-    fun_eval <- .makeTextFun(fun)
+    fun_eval <- resolve_summary_function(fun)
     return(terra::focal(x, w = kernel, fun = fun_eval, na.rm = na.rm, ...))
     
   } else {

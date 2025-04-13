@@ -1,25 +1,25 @@
 Package: fastfocal
 Type: Package
-Title: Fast Multi-Scale Focal and Extraction Functions for Raster Data
+Title: fastfocal: Fast Multi-scale Raster Extraction and Moving Window
+    Analysis with Fast Fourier Transform (FFT)
 Version: 0.1.0
 Date: 2025-04-12
 Authors@R: c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
 Description: Fast and flexible moving window and buffer-based raster extraction
     at user-defined spatial scales. Supports various focal statistics and
     point-based or buffer-based extraction using sf or terra.
-License: GPL-3
+License: GPL-3 | file LICENSE
+LicenseFile: LICENSE
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    terra, 
-    sf, 
-    progressr
+    terra
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 URL: https://github.com/hoyiwan/fastfocal
 BugReports: https://github.com/hoyiwan/fastfocal/issues
+Config/testthat/edition: 3

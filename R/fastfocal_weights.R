@@ -11,8 +11,12 @@
 #' @return A numeric matrix of focal weights.
 #' @export
 #'
+#' @importFrom terra rast
+#' 
 #' @examples
+#' library(terra)
 #' x <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
+#' values(x) <- runif(ncell(x))
 #' fastfocal_weights(x, d = 300, w = "gaussian", plot = TRUE)
 fastfocal_weights <- function(x, d, w = "circle", normalize = TRUE, plot = FALSE) {
   if (!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")

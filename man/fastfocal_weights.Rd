@@ -26,6 +26,8 @@ A numeric matrix of focal weights.
 Generate weight matrix for focal operations using map units
 }
 \examples{
+library(terra)
 x <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
+values(x) <- runif(ncell(x))
 fastfocal_weights(x, d = 300, w = "gaussian", plot = TRUE)
 }

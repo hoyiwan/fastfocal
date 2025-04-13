@@ -11,24 +11,29 @@ fastfocal(x, d, w = "circle", fun = "mean", engine = "auto", na.rm = TRUE, ...)
 
 \item{d}{Numeric. Radius or size of the smoothing window (in map units).}
 
-\item{w}{Character. Type of window: "rectangle", "circle", "gaussian", "pareto", "idw", or "exponential".}
+\item{w}{Character. Type of window: one of
+"rectangle", "circle", "gaussian", "pareto", "idw", "exponential",
+"triangular", "cosine", "logistic", "cauchy", "quartic", or "epanechnikov".}
 
-\item{fun}{Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "range", "median", "mode", "p25", or "p75".}
+\item{fun}{Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "median".}
 
 \item{engine}{Character. Either "auto" (default), "cpp", or "fft" to choose backend.}
 
 \item{na.rm}{Logical. Remove NAs before applying function.}
 
-\item{...}{Additional arguments passed to terra::focal if using C++ backend.}
+\item{...}{Additional arguments passed to \code{\link[terra:focal]{terra::focal()}} if using the C++ backend.}
 }
 \value{
-A SpatRaster of the same dimensions as \code{x}, containing the focal-smoothed values.
+A \link[terra:SpatRaster-class]{terra::SpatRaster} of the same dimensions as \code{x}, containing the focal-smoothed values.
 }
 \description{
 Applies a focal smoothing operation to a SpatRaster using either a C++ (via terra) or FFT backend.
 Supports a range of window types including rectangle, circle, gaussian, pareto, idw, and exponential.
 }
 \examples{
-r <- rast(matrix(runif(100), 10, 10))
-fastfocal(r, d = 3, w = "gaussian", fun = "mean")
+library(terra)
+x <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
+values(x) <- runif(ncell(x))
+result <- fastfocal(x, d = 300, w = "circle", fun = "mean")
+plot(result)
 }

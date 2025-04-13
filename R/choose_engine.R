@@ -8,6 +8,9 @@
 #' @param threshold Numeric. Heuristic threshold for fft (default: 1e6).
 #'
 #' @return Character string: "fft" or "cpp"
+#' 
+#' @importFrom terra ncell
+#' 
 #' @keywords internal
 choose_engine <- function(r, d, fun = "mean", threshold = 1e6) {
   # Only mean and sum are supported by FFT
