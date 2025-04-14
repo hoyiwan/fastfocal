@@ -5,9 +5,10 @@ author: "Ho Yi Wan"
 output: rmarkdown::html_vignette
 bibliography: references.bib
 vignette: >
-  %\VignetteIndexEntry{Intro to fastfocal (Multi-layer Raster Support)}
+  %\VignetteIndexEntry{fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteTangle{index.R}
 ---
 
 ```{r setup, include = FALSE}
@@ -25,11 +26,11 @@ library(fastfocal)
 
 ## What is `fastfocal`?
 
-Welcome! I created the `fastfocal` (Wan 2025) package because I do a lot of multi-scale ecological modeling, which requires applying focal statistics at various spatial scales. As rasters and kernels grow larger, traditional methods quickly become painfully slow — and I couldn’t find a solution that was both fast and flexible.
+Welcome! I created the `fastfocal` R package (Wan 2025) because I do a lot of multi-scale ecological modeling, which requires applying focal statistics at various spatial scales. As rasters and kernels grow larger, traditional methods quickly become painfully slow — and I couldn’t find a solution that was both fast and flexible.
 
 So I built one.
 
-If you’ve landed here, chances are you’ve run into the same problem: you need to perform spatial smoothing or buffer-based extraction across large rasters or at multiple scales, and existing tools just aren’t fast enough. That’s exactly the need `fastfocal` was built to solve.
+If you’ve landed here, chances are you’ve run into the same problem: you need to perform spatial smoothing or buffer-based extraction across large rasters or at multiple scales, and existing tools just aren’t fast or friendly enough. That’s exactly the need `fastfocal` was built to solve.
 
 The `fastfocal` R package is designed for **high-performance focal and buffer-based raster processing**. It provides intuitive and fast **multi-layer aware** moving window operations and point-based extraction, with support for a rich variety of **kernel shapes**. Crucially, it automatically switches to **Fast Fourier Transform (FFT)** to optimize performance, dramatically accelerating large-kernel operations.Built on the `terra` framework, `fastfocal` works seamlessly with `SpatRaster` and `SpatVector` objects. It streamlines buffer extraction into a single-step function with **on-the-fly kernel generation**, so users can focus on analysis rather than boilerplate setup.
 
