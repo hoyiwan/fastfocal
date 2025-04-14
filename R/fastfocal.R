@@ -85,7 +85,7 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
   kernel <- fastfocal_weights(x = x, d = d, w = w, normalize = normalize_kernel)
   
   if (engine == "fft") {
-    if (interactive()) cat("Using FFT backend\\n")
+    #if (interactive()) cat("Using FFT backend\\n")
     
     mat <- matrix(terra::values(x), nrow = terra::nrow(x), ncol = terra::ncol(x), byrow = TRUE)
     
@@ -104,7 +104,7 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
     return(out)
     
   } else if (engine == "cpp") {
-    if (interactive()) cat("Using terra::focal backend\\n")
+    #if (interactive()) cat("Using terra::focal backend\\n")
     
     fun_eval <- resolve_summary_function(fun)
     return(terra::focal(x, w = kernel, fun = fun_eval, na.rm = na.rm, ...))
