@@ -1,11 +1,11 @@
 ---
-title: "fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)"
+title: "fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R"
 subtitle: "Version 0.1.0 (2025)"
 author: "Ho Yi Wan"
 output: rmarkdown::html_vignette
 bibliography: references.bib
 vignette: >
-  %\VignetteIndexEntry{fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)}
+  %\VignetteIndexEntry{fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignetteTangle{index.R}
@@ -44,7 +44,7 @@ This vignette walks through the core functionality through simulated ecological 
 - **Flexible kernels**: Choose from 10+ window types (e.g., circle, Gaussian, logistic, quartic).
 - **Map unit radius (in meters)**: Specify smoothing or extraction radius directly in meters.
 - **Point-based extraction**: Extract raster summaries at points with optional buffer windows.
-- **FFT backend**: Automatically switches to fast Fourier transform for large kernels.
+- **FFT backend**: Automatically switches to Fast Fourier Transform for large kernels.
 - **Identical geometry output**: Outputs maintain resolution, extent, and CRS of the input.
 
 ---

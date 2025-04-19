@@ -13,7 +13,7 @@
 <meta name="author" content="Ho Yi Wan" />
 
 
-<title>fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)</title>
+<title>fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -338,8 +338,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">fastfocal: Fast Multi-scale Raster
-Extraction and Moving Window Analysis with Fast Fourier Transform
-(FFT)</h1>
+Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)
+in R</h1>
 <h3 class="subtitle">Version 0.1.0 (2025)</h3>
 <h4 class="author">Ho Yi Wan</h4>
 
@@ -388,8 +388,8 @@ across stacked rasters without manual iteration.</li>
 extraction radius directly in meters.</li>
 <li><strong>Point-based extraction</strong>: Extract raster summaries at
 points with optional buffer windows.</li>
-<li><strong>FFT backend</strong>: Automatically switches to fast Fourier
-transform for large kernels.</li>
+<li><strong>FFT backend</strong>: Automatically switches to Fast Fourier
+Transform for large kernels.</li>
 <li><strong>Identical geometry output</strong>: Outputs maintain
 resolution, extent, and CRS of the input.</li>
 </ul>
@@ -597,35 +597,36 @@ here to see benchmark: fastfocal vs terra::focal</a></p>
 <span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt; tzcode source: internal</span></span>
 <span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt; attached base packages:</span></span>
-<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
-<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
-<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a><span class="co">#&gt; [1] fastfocal_0.1.0 testthat_3.2.3  ggplot2_3.5.1   dplyr_1.1.4    </span></span>
-<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a><span class="co">#&gt; [5] terra_1.8-42   </span></span>
-<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a><span class="co">#&gt;  [1] sass_0.4.9        generics_0.1.3    xml2_1.3.7       </span></span>
-<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a><span class="co">#&gt;  [4] stringi_1.8.4     digest_0.6.37     magrittr_2.0.3   </span></span>
-<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a><span class="co">#&gt;  [7] evaluate_1.0.3    grid_4.4.3        pkgload_1.4.0    </span></span>
-<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a><span class="co">#&gt; [10] fastmap_1.2.0     jsonlite_1.9.1    rprojroot_2.0.4  </span></span>
-<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a><span class="co">#&gt; [13] pkgbuild_1.4.6    sessioninfo_1.2.3 brio_1.1.5       </span></span>
-<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a><span class="co">#&gt; [16] urlchecker_1.0.1  promises_1.3.2    purrr_1.0.4      </span></span>
-<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a><span class="co">#&gt; [19] scales_1.3.0      jquerylib_0.1.4   codetools_0.2-20 </span></span>
-<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a><span class="co">#&gt; [22] cli_3.6.4         shiny_1.10.0      rlang_1.1.5      </span></span>
-<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a><span class="co">#&gt; [25] commonmark_1.9.2  ellipsis_0.3.2    munsell_0.5.1    </span></span>
-<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a><span class="co">#&gt; [28] remotes_2.5.0     withr_3.0.2       cachem_1.1.0     </span></span>
-<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a><span class="co">#&gt; [31] yaml_2.3.10       devtools_2.4.5    tools_4.4.3      </span></span>
-<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a><span class="co">#&gt; [34] memoise_2.0.1     colorspace_2.1-1  httpuv_1.6.15    </span></span>
-<span id="cb11-39"><a href="#cb11-39" tabindex="-1"></a><span class="co">#&gt; [37] vctrs_0.6.5       R6_2.6.1          mime_0.12        </span></span>
-<span id="cb11-40"><a href="#cb11-40" tabindex="-1"></a><span class="co">#&gt; [40] lifecycle_1.0.4   stringr_1.5.1     fs_1.6.5         </span></span>
-<span id="cb11-41"><a href="#cb11-41" tabindex="-1"></a><span class="co">#&gt; [43] htmlwidgets_1.6.4 usethis_3.1.0     miniUI_0.1.1.1   </span></span>
-<span id="cb11-42"><a href="#cb11-42" tabindex="-1"></a><span class="co">#&gt; [46] desc_1.4.3        pkgconfig_2.0.3   bslib_0.9.0      </span></span>
-<span id="cb11-43"><a href="#cb11-43" tabindex="-1"></a><span class="co">#&gt; [49] pillar_1.10.1     later_1.4.1       gtable_0.3.6     </span></span>
-<span id="cb11-44"><a href="#cb11-44" tabindex="-1"></a><span class="co">#&gt; [52] glue_1.8.0        profvis_0.4.0     Rcpp_1.0.14      </span></span>
-<span id="cb11-45"><a href="#cb11-45" tabindex="-1"></a><span class="co">#&gt; [55] xfun_0.51         tibble_3.2.1      tidyselect_1.2.1 </span></span>
-<span id="cb11-46"><a href="#cb11-46" tabindex="-1"></a><span class="co">#&gt; [58] rstudioapi_0.17.1 knitr_1.49        xtable_1.8-4     </span></span>
-<span id="cb11-47"><a href="#cb11-47" tabindex="-1"></a><span class="co">#&gt; [61] htmltools_0.5.8.1 rmarkdown_2.29    compiler_4.4.3   </span></span>
-<span id="cb11-48"><a href="#cb11-48" tabindex="-1"></a><span class="co">#&gt; [64] roxygen2_7.3.2</span></span></code></pre></div>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods  </span></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="co">#&gt; [7] base     </span></span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a><span class="co">#&gt; [1] fastfocal_0.1.0 testthat_3.2.3  ggplot2_3.5.1   dplyr_1.1.4    </span></span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a><span class="co">#&gt; [5] terra_1.8-42   </span></span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a><span class="co">#&gt;  [1] sass_0.4.9        generics_0.1.3    xml2_1.3.7       </span></span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a><span class="co">#&gt;  [4] stringi_1.8.4     digest_0.6.37     magrittr_2.0.3   </span></span>
+<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a><span class="co">#&gt;  [7] evaluate_1.0.3    grid_4.4.3        pkgload_1.4.0    </span></span>
+<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a><span class="co">#&gt; [10] fastmap_1.2.0     jsonlite_1.9.1    rprojroot_2.0.4  </span></span>
+<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a><span class="co">#&gt; [13] pkgbuild_1.4.6    sessioninfo_1.2.3 brio_1.1.5       </span></span>
+<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a><span class="co">#&gt; [16] urlchecker_1.0.1  promises_1.3.2    purrr_1.0.4      </span></span>
+<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a><span class="co">#&gt; [19] scales_1.3.0      jquerylib_0.1.4   codetools_0.2-20 </span></span>
+<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a><span class="co">#&gt; [22] cli_3.6.4         shiny_1.10.0      rlang_1.1.5      </span></span>
+<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a><span class="co">#&gt; [25] commonmark_1.9.2  ellipsis_0.3.2    munsell_0.5.1    </span></span>
+<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a><span class="co">#&gt; [28] remotes_2.5.0     withr_3.0.2       cachem_1.1.0     </span></span>
+<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a><span class="co">#&gt; [31] yaml_2.3.10       devtools_2.4.5    tools_4.4.3      </span></span>
+<span id="cb11-39"><a href="#cb11-39" tabindex="-1"></a><span class="co">#&gt; [34] memoise_2.0.1     colorspace_2.1-1  httpuv_1.6.15    </span></span>
+<span id="cb11-40"><a href="#cb11-40" tabindex="-1"></a><span class="co">#&gt; [37] vctrs_0.6.5       R6_2.6.1          mime_0.12        </span></span>
+<span id="cb11-41"><a href="#cb11-41" tabindex="-1"></a><span class="co">#&gt; [40] lifecycle_1.0.4   stringr_1.5.1     fs_1.6.5         </span></span>
+<span id="cb11-42"><a href="#cb11-42" tabindex="-1"></a><span class="co">#&gt; [43] htmlwidgets_1.6.4 usethis_3.1.0     miniUI_0.1.1.1   </span></span>
+<span id="cb11-43"><a href="#cb11-43" tabindex="-1"></a><span class="co">#&gt; [46] desc_1.4.3        pkgconfig_2.0.3   bslib_0.9.0      </span></span>
+<span id="cb11-44"><a href="#cb11-44" tabindex="-1"></a><span class="co">#&gt; [49] pillar_1.10.1     later_1.4.1       gtable_0.3.6     </span></span>
+<span id="cb11-45"><a href="#cb11-45" tabindex="-1"></a><span class="co">#&gt; [52] glue_1.8.0        profvis_0.4.0     Rcpp_1.0.14      </span></span>
+<span id="cb11-46"><a href="#cb11-46" tabindex="-1"></a><span class="co">#&gt; [55] xfun_0.51         tibble_3.2.1      tidyselect_1.2.1 </span></span>
+<span id="cb11-47"><a href="#cb11-47" tabindex="-1"></a><span class="co">#&gt; [58] rstudioapi_0.17.1 knitr_1.49        xtable_1.8-4     </span></span>
+<span id="cb11-48"><a href="#cb11-48" tabindex="-1"></a><span class="co">#&gt; [61] htmltools_0.5.8.1 rmarkdown_2.29    compiler_4.4.3   </span></span>
+<span id="cb11-49"><a href="#cb11-49" tabindex="-1"></a><span class="co">#&gt; [64] roxygen2_7.3.2</span></span></code></pre></div>
 </div>
 <div id="citation" class="section level2">
 <h2>📚 Citation</h2>
@@ -635,9 +636,9 @@ Moving Window Analysis with FFT. R package version X.X.X. <a href="https://githu
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">citation</span>(<span class="st">&quot;fastfocal&quot;</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt; To cite package &#39;fastfocal&#39; in publications use:</span></span>
 <span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;   Wan H (2025). _fastfocal: fastfocal: Fast Multi-scale Raster</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;   Extraction and Moving Window Analysis with Fast Fourier</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;   Transform (FFT)_. R package version 0.1.0,</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;   Wan H (2025). _fastfocal: fastfocal: Fast Multi-scale</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;   Raster Extraction and Moving Window Analysis with Fast</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;   Fourier Transform (FFT)_. R package version 0.1.0,</span></span>
 <span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;   &lt;https://github.com/hoyiwan/fastfocal&gt;.</span></span>
 <span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; A BibTeX entry for LaTeX users is</span></span>
