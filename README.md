@@ -34,7 +34,7 @@ This package includes:
 - `fastextract()` — fast extraction of raster values at point or buffer locations
 - `fastfocal_weights()` — utility for generating spatial weight matrices (circular, Gaussian, etc.)
 - Auto-switch backend to FFT for large windows to improve performance
-- Native support for `terra::SpatRaster` and `sf` objects
+- Native support for `terra::SpatRaster` and `terra::SpatVector` objects
 
 ---
 
@@ -58,10 +58,8 @@ plot(smoothed)
 Or for weighted extraction at points:
 
 ```r
-library(sf)
-
-# Sample points
-pts <- st_as_sf(data.frame(x = c(500, 1500), y = c(500, 2500)), coords = c("x", "y"), crs = crs(r))
+# Create SpatVector of points
+pts <- vect(data.frame(x = c(500, 1500), y = c(500, 2500)), geom = c("x", "y"), crs = crs(r))
 
 # Extract raster values in 500m buffers around points
 result <- fastextract(r, pts, d = 500, fun = "mean")
@@ -70,15 +68,16 @@ print(result)
 
 ---
 
-## 📖 Vignette
+## 📖 Vignettes
 
-A full introduction is available in the package vignette:
+- [📘 Introduction (Index)](https://hoyiwan.github.io/fastfocal/index.html)
+- [⏱ Benchmark: fastfocal vs terra::focal](https://hoyiwan.github.io/fastfocal/benchmark.html)
+
+You can also access them from R using:
 
 ```r
 vignette("index", package = "fastfocal")
 ```
-
-Or browse it online: [📘 Vignette on GitHub](https://github.com/hoyiwan/fastfocal/blob/main/vignettes/index.Rmd)
 
 ---
 
