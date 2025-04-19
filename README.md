@@ -3,7 +3,7 @@
 [![CRAN Status](https://www.r-pkg.org/badges/version/fastfocal)](https://CRAN.R-project.org/package=fastfocal)
 [![R-CMD-check](https://github.com/hoyiwan/fastfocal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hoyiwan/fastfocal/actions)
 
-**fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT)**
+**fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R**
 
 `fastfocal` provides high-performance, flexible raster smoothing and extraction functions in R using moving windows, buffer-based zones, and an auto-switching FFT backend for large kernels. It supports multiple focal statistics and allows users to work at multiple spatial scales with ease.
 

@@ -1,7 +1,7 @@
 Package: fastfocal
 Type: Package
 Title: fastfocal: Fast Multi-scale Raster Extraction and Moving Window
-    Analysis with Fast Fourier Transform (FFT)
+    Analysis with Fast Fourier Transform (FFT) in R
 Version: 0.1.0
 Date: 2025-04-12
 Authors@R: c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
@@ -15,6 +15,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     terra
+    dplyr
 Suggests: 
     knitr,
     rmarkdown,
