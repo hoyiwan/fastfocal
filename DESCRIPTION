@@ -7,7 +7,7 @@ Date: 2025-04-12
 Authors@R: c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
 Description: Fast and flexible moving window and buffer-based raster extraction
     at user-defined spatial scales. Supports various focal statistics and
-    point-based or buffer-based extraction terra.
+    point-based or buffer-based extraction.
 License: GPL-3 | file LICENSE
 LicenseFile: LICENSE
 Encoding: UTF-8
