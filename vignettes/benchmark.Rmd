@@ -1,6 +1,5 @@
 ---
 title: "Benchmarking fastfocal"
-subtitle: "How fast is fastfocal?"
 author: "Ho Yi Wan"
 output: rmarkdown::html_vignette
 vignette: >
