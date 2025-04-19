@@ -20,7 +20,7 @@ Suggests:
     rmarkdown,
     dplyr,
     testthat (>= 3.0.0)
-VignetteBuilder: knitr
+VignetteBuilder: rmarkdown
 URL: https://github.com/hoyiwan/fastfocal
 BugReports: https://github.com/hoyiwan/fastfocal/issues
 Config/testthat/edition: 3
