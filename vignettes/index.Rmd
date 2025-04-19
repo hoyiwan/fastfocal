@@ -195,6 +195,12 @@ par(mfrow = c(1, 1))
 - Kernel size `d` is in **map units** (e.g., meters)
 - Kernels were visualized using a center-pixel matrix to show their spatial shape
 
+## Explore More
+
+⏱Want to know how fast it really is?
+[Click here to see benchmark: fastfocal vs terra::focal](benchmark.html)
+
+
 ## 📋 Session Info
 
 ```{r}
