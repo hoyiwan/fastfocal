@@ -8,7 +8,6 @@ vignette: >
   %\VignetteIndexEntry{fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R}
   %\VignetteEngine{rmarkdown::html_vignette}
   %\VignetteEncoding{UTF-8}
-  %\VignetteTangle{index.R}
 ---
 
 ```{r setup, include = FALSE}
