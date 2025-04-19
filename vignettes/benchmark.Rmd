@@ -1,21 +1,25 @@
 ---
-title: "Benchmarking Fastfocal vs terra::focal"
-output: html_document
+title: "Benchmarking fastfocal"
+subtitle: "How fast is fastfocal?"
+author: "Ho Yi Wan"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Benchmarking fastfocal}
+  %\VignetteEngine{rmarkdown::html_vignette}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## What's faster — fastfocal or terra::focal?
+## Is it faster?
 
-Now you might be wondering — is `fastfocal()` actually faster?  
-And how fast are we talking?
+> *Now you might be wondering... is it **really** faster? And how fast are we talking?*
 
-Let’s find out by pitting it against `terra::focal()` in a good old-fashioned benchmark battle.  
-We’ll try it on a range of raster sizes and kernel radii, and chart out the differences in performance.
+Well, we wondered the same thing. And how fast are we talking?
 
-We’ll also skip the waiting (mostly) by loading precomputed results — but we’ll show you how to run the full benchmark if you’re feeling adventurous.
+Let’s find out by pitting `fastfocal()` against `terra::focal()` in a good old-fashioned benchmark battle. We’ll try it on a range of raster sizes and kernel radii, and chart out the differences in performance. We’ll also skip the waiting (mostly) by loading precomputed results - but we’ll show you how to run the full benchmark if you’re feeling adventurous.
 
 ---
 

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Ho Yi Wan" />
+
+
+<title>Benchmarking fastfocal</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Benchmarking fastfocal</h1>
+<h3 class="subtitle">How fast is fastfocal?</h3>
+<h4 class="author">Ho Yi Wan</h4>
+
+
+
+<div id="is-it-faster" class="section level2">
+<h2>Is it faster?</h2>
+<blockquote>
+<p><em>Now you might be wondering… is it <strong>really</strong> faster?
+And how fast are we talking?</em></p>
+</blockquote>
+<p>Well, we wondered the same thing. And how fast are we talking?</p>
+<p>Let’s find out by pitting <code>fastfocal()</code> against
+<code>terra::focal()</code> in a good old-fashioned benchmark battle.
+We’ll try it on a range of raster sizes and kernel radii, and chart out
+the differences in performance. We’ll also skip the waiting (mostly) by
+loading precomputed results - but we’ll show you how to run the full
+benchmark if you’re feeling adventurous.</p>
+<hr />
+</div>
+<div id="load-libraries-and-set-parameters" class="section level2">
+<h2>Load libraries and set parameters</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(fastfocal)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div>
+</div>
+<div id="setups" class="section level2">
+<h2>Setups</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>raster_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">250</span>, <span class="dv">500</span>, <span class="dv">1000</span>, <span class="dv">2500</span>, <span class="dv">5000</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>kernel_sizes <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">100</span>, <span class="dv">1000</span>, <span class="dv">100</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>replicates <span class="ot">&lt;-</span> <span class="dv">1</span>  <span class="co"># Recommended using a small number of runs due to memory constraints. You can combine results from multiple runs later.</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>res_m <span class="ot">&lt;-</span> <span class="dv">30</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>crs_m <span class="ot">&lt;-</span> <span class="st">&quot;EPSG:3857&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">888</span>)</span></code></pre></div>
+<hr />
+</div>
+<div id="create-test-rasters" class="section level2">
+<h2>Create test rasters</h2>
+<p>Each raster is square, with resolution fixed at 30 meters.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>rasters <span class="ot">&lt;-</span> <span class="fu">lapply</span>(raster_sizes, <span class="cf">function</span>(size) {</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  ext_x <span class="ot">&lt;-</span> size <span class="sc">*</span> res_m</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  ext_y <span class="ot">&lt;-</span> size <span class="sc">*</span> res_m</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  ext <span class="ot">&lt;-</span> <span class="fu">ext</span>(<span class="dv">0</span>, ext_x, <span class="dv">0</span>, ext_y)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  r <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="at">nrows =</span> size, <span class="at">ncols =</span> size, <span class="at">extent =</span> ext, <span class="at">crs =</span> crs_m)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="fu">values</span>(r) <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="fu">ncell</span>(r))</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  r</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>})</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="fu">names</span>(rasters) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(raster_sizes)</span></code></pre></div>
+<hr />
+</div>
+<div id="lets-take-a-peek" class="section level2">
+<h2>Let’s take a peek</h2>
+<p>Here’s what the input rasters look like — just randomized data, but
+the sizes vary.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>raster_labels <span class="ot">&lt;-</span> <span class="fu">paste0</span>(raster_sizes, <span class="st">&quot;×&quot;</span>, raster_sizes)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(rasters)) {</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="fu">plot</span>(rasters[[i]], <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">&quot;Raster:&quot;</span>, raster_labels[i]))</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>}</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<hr />
+</div>
+<div id="benchmarking-optional-slow" class="section level2">
+<h2>Benchmarking (optional, slow)</h2>
+<blockquote>
+<p>⚠️ This section takes a while to run — maybe grab a snack.<br />
+We’ve commented it out for now, but you can uncomment if you’re
+benchmarking live.</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># grid &lt;- expand.grid(</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#   raster_size = raster_sizes,</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#   d = kernel_sizes,</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#   method = c(&quot;fastfocal&quot;, &quot;terra&quot;),</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#   stringsAsFactors = FALSE</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># )</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co"># dir.create(&quot;benchmark_chunks&quot;, showWarnings = FALSE)</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co"># benchmark_row &lt;- function(idx) {</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#   size &lt;- grid$raster_size[idx]</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#   d &lt;- grid$d[idx]</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#   method &lt;- grid$method[idx]</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#   fname &lt;- sprintf(&quot;benchmark_chunks/%s_%d_%dm.csv&quot;, method, size, d)</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#   if (file.exists(fname)) return(NULL)</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#   r &lt;- rasters[[as.character(size)]]</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#   times &lt;- sapply(seq_len(replicates), function(i) {</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#     start_time &lt;- Sys.time()</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#     if (method == &quot;fastfocal&quot;) {</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#       fastfocal(x = r, d = d, type = &quot;circle&quot;, fun = &quot;mean&quot;)</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#     } else {</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#       w &lt;- focalMat(r, d, type = &quot;circle&quot;)</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#       if (all(w == 0)) return(NA)</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#       focal(r, w = w, fun = mean, na.rm = TRUE)</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#     }</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#     as.numeric(difftime(Sys.time(), start_time, units = &quot;secs&quot;))</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#   })</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#   chunk_df &lt;- data.frame(method = method, raster_size = size, d = d, time = times)</span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#   write.csv(chunk_df, file = fname, row.names = FALSE)</span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co"># }</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co"># invisible(sapply(seq_len(nrow(grid)), benchmark_row))</span></span></code></pre></div>
+<hr />
+</div>
+<div id="skip-the-wait-load-precomputed-results" class="section level2">
+<h2>Skip the wait: load precomputed results</h2>
+<p>Let’s save ourselves some time and just load up the baked
+results.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;benchmark.csv&quot;</span>, <span class="at">package =</span> <span class="st">&quot;fastfocal&quot;</span>))</span></code></pre></div>
+<hr />
+</div>
+<div id="summarize-and-visualize-results" class="section level2">
+<h2>Summarize and visualize results</h2>
+<p>Here comes the payoff — a set of plots showing runtime by kernel size
+and raster size.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>summary_df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="fu">group_by</span>(method, raster_size, d) <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>    <span class="at">mean_time =</span> <span class="fu">mean</span>(time),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    <span class="at">se_time =</span> <span class="fu">sd</span>(time) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">n</span>()),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">raster_label =</span> <span class="fu">factor</span>(</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    <span class="fu">paste0</span>(raster_size, <span class="st">&quot;×&quot;</span>, raster_size),</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>    <span class="at">levels =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">unique</span>(df<span class="sc">$</span>raster_size)), <span class="st">&quot;×&quot;</span>, <span class="fu">sort</span>(<span class="fu">unique</span>(df<span class="sc">$</span>raster_size)))</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  ))</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">layout</span>(<span class="fu">matrix</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>, <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;fastfocal&quot;</span> <span class="ot">=</span> <span class="st">&quot;#0072B2&quot;</span>, <span class="st">&quot;terra&quot;</span> <span class="ot">=</span> <span class="st">&quot;#D55E00&quot;</span>)</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>raster_labels <span class="ot">&lt;-</span> <span class="fu">levels</span>(summary_df<span class="sc">$</span>raster_label)</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="cf">for</span> (label <span class="cf">in</span> raster_labels) {</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  subset <span class="ot">&lt;-</span> <span class="fu">subset</span>(summary_df, raster_label <span class="sc">==</span> label)</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="cn">NA</span>,</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>       <span class="at">xlim =</span> <span class="fu">range</span>(subset<span class="sc">$</span>d),</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>       <span class="at">ylim =</span> <span class="fu">range</span>(subset<span class="sc">$</span>mean_time <span class="sc">+</span> subset<span class="sc">$</span>se_time, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">&quot;Kernel Size (m)&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Mean Time (s)&quot;</span>,</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">&quot;Raster:&quot;</span>, label))</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>  methods <span class="ot">&lt;-</span> <span class="fu">unique</span>(subset<span class="sc">$</span>method)</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  <span class="cf">for</span> (m <span class="cf">in</span> methods) {</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>    data <span class="ot">&lt;-</span> subset[subset<span class="sc">$</span>method <span class="sc">==</span> m, ]</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>    <span class="fu">lines</span>(data<span class="sc">$</span>d, data<span class="sc">$</span>mean_time, <span class="at">col =</span> cols[m], <span class="at">type =</span> <span class="st">&quot;b&quot;</span>, <span class="at">pch =</span> <span class="dv">16</span>)</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>    max_time <span class="ot">&lt;-</span> <span class="fu">max</span>(subset<span class="sc">$</span>mean_time, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>    min_se <span class="ot">&lt;-</span> <span class="fl">0.001</span> <span class="sc">*</span> max_time</span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>    se <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(data<span class="sc">$</span>se_time), <span class="dv">0</span>, data<span class="sc">$</span>se_time)</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>    se_final <span class="ot">&lt;-</span> <span class="fu">pmax</span>(se, min_se)</span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>    <span class="fu">suppressWarnings</span>(<span class="fu">arrows</span>(</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>      <span class="at">x0 =</span> data<span class="sc">$</span>d,</span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>      <span class="at">y0 =</span> data<span class="sc">$</span>mean_time <span class="sc">-</span> se_final,</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>      <span class="at">x1 =</span> data<span class="sc">$</span>d,</span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>      <span class="at">y1 =</span> data<span class="sc">$</span>mean_time <span class="sc">+</span> se_final,</span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>      <span class="at">angle =</span> <span class="dv">90</span>, <span class="at">code =</span> <span class="dv">3</span>, <span class="at">length =</span> <span class="fl">0.05</span>, <span class="at">col =</span> cols[m]</span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>    ))</span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>  }</span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>  <span class="fu">legend</span>(<span class="st">&quot;topleft&quot;</span>, <span class="at">legend =</span> methods, <span class="at">col =</span> cols[methods], <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">lty =</span> <span class="dv">1</span>, <span class="at">bty =</span> <span class="st">&quot;n&quot;</span>)</span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>}</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<hr />
+</div>
+<div id="wrap-up" class="section level2">
+<h2>Wrap-up</h2>
+<p>That’s it!<br />
+<code>fastfocal</code> shows solid speed gains, especially as raster
+size and kernel radius grow.<br />
+Tiny standard errors mean consistent performance — and good vibes all
+around.</p>
+<p>🎯 Next up: let’s dive into accuracy comparison and visual diff
+maps!</p>
+<hr />
+</div>
+<div id="bonus-round-accuracy-check" class="section level2">
+<h2>Bonus Round: Accuracy Check 🧐</h2>
+<p>Okay, so <code>fastfocal</code> is fast — but is it accurate?</p>
+<p>Let’s run both <code>fastfocal()</code> and
+<code>terra::focal()</code> on the same raster (1000 × 1000) using a 500
+m radius, and see how close they really are.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Pick one test raster and kernel</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>test_r <span class="ot">&lt;-</span> rasters[[<span class="st">&quot;1000&quot;</span>]]</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>kernel_d <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co"># Run fastfocal</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>r_fast <span class="ot">&lt;-</span> <span class="fu">fastfocal</span>(test_r, <span class="at">d =</span> kernel_d, <span class="at">type =</span> <span class="st">&quot;circle&quot;</span>, <span class="at">fun =</span> <span class="st">&quot;mean&quot;</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co"># Run terra::focal</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>w <span class="ot">&lt;-</span> <span class="fu">focalMat</span>(test_r, kernel_d, <span class="at">type =</span> <span class="st">&quot;circle&quot;</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>r_terra <span class="ot">&lt;-</span> <span class="fu">focal</span>(test_r, <span class="at">w =</span> w, <span class="at">fun =</span> mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co"># Compute difference raster</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>r_diff <span class="ot">&lt;-</span> <span class="fu">abs</span>(r_fast <span class="sc">-</span> r_terra)</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co"># Extract values and compare</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>v_fast <span class="ot">&lt;-</span> <span class="fu">values</span>(r_fast)</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>v_terra <span class="ot">&lt;-</span> <span class="fu">values</span>(r_terra)</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>v_diff <span class="ot">&lt;-</span> <span class="fu">values</span>(r_diff)</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>mean_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(v_diff, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>max_diff <span class="ot">&lt;-</span> <span class="fu">max</span>(v_diff, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co"># Show summary</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Mean Difference:&quot;</span>, <span class="fu">round</span>(mean_diff, <span class="dv">6</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Mean Difference: 0</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Max Difference :&quot;</span>, <span class="fu">round</span>(max_diff, <span class="dv">6</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Max Difference : 0</code></pre>
+<div id="visual-comparison" class="section level3">
+<h3>Visual Comparison</h3>
+<p>Let’s plot the input, outputs, and the difference raster:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">2</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="fu">plot</span>(test_r,   <span class="at">main =</span> <span class="st">&quot;Original&quot;</span>, <span class="at">col =</span> <span class="fu">terrain.colors</span>(<span class="dv">20</span>))</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="fu">plot</span>(r_terra,  <span class="at">main =</span> <span class="st">&quot;terra::focal (500 m)&quot;</span>, <span class="at">col =</span> <span class="fu">terrain.colors</span>(<span class="dv">20</span>))</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="fu">plot</span>(r_fast,   <span class="at">main =</span> <span class="st">&quot;fastfocal (500 m)&quot;</span>, <span class="at">col =</span> <span class="fu">terrain.colors</span>(<span class="dv">20</span>))</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="fu">plot</span>(r_diff,   <span class="at">main =</span> <span class="st">&quot;Absolute Difference&quot;</span>, <span class="at">col =</span> <span class="fu">hcl.colors</span>(<span class="dv">20</span>, <span class="st">&quot;YlOrRd&quot;</span>, <span class="at">rev =</span> <span class="cn">TRUE</span>))</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<hr />
+<p>Zero difference! That means we’re not just fast, but also
+accurate!</p>
+<hr />
+</div>
+</div>
+<div id="back-to-overview" class="section level2">
+<h2>📚 Back to Overview</h2>
+<p>Looking for the big picture?<br />
+<a href="index.html">Click here to return to the main vignette.</a></p>
+<hr />
+</div>
+<div id="session-info" class="section level2">
+<h2>📋 Session Info</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>## R version 4.4.3 (2025-02-28 ucrt)
+## Platform: x86_64-w64-mingw32/x64
+## Running under: Windows 11 x64 (build 26100)
+## 
+## Matrix products: default
+## 
+## 
+## locale:
+## [1] LC_COLLATE=English_United States.utf8 
+## [2] LC_CTYPE=English_United States.utf8   
+## [3] LC_MONETARY=English_United States.utf8
+## [4] LC_NUMERIC=C                          
+## [5] LC_TIME=English_United States.utf8    
+## 
+## time zone: America/Los_Angeles
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] fastfocal_0.1.0 testthat_3.2.3  ggplot2_3.5.1   dplyr_1.1.4    
+## [5] terra_1.8-42   
+## 
+## loaded via a namespace (and not attached):
+##  [1] sass_0.4.9        generics_0.1.3    xml2_1.3.7       
+##  [4] stringi_1.8.4     digest_0.6.37     magrittr_2.0.3   
+##  [7] evaluate_1.0.3    grid_4.4.3        pkgload_1.4.0    
+## [10] fastmap_1.2.0     jsonlite_1.9.1    rprojroot_2.0.4  
+## [13] pkgbuild_1.4.6    sessioninfo_1.2.3 brio_1.1.5       
+## [16] urlchecker_1.0.1  promises_1.3.2    purrr_1.0.4      
+## [19] scales_1.3.0      jquerylib_0.1.4   codetools_0.2-20 
+## [22] cli_3.6.4         shiny_1.10.0      rlang_1.1.5      
+## [25] commonmark_1.9.2  ellipsis_0.3.2    munsell_0.5.1    
+## [28] remotes_2.5.0     withr_3.0.2       cachem_1.1.0     
+## [31] yaml_2.3.10       devtools_2.4.5    tools_4.4.3      
+## [34] memoise_2.0.1     colorspace_2.1-1  httpuv_1.6.15    
+## [37] vctrs_0.6.5       R6_2.6.1          mime_0.12        
+## [40] lifecycle_1.0.4   stringr_1.5.1     fs_1.6.5         
+## [43] htmlwidgets_1.6.4 usethis_3.1.0     miniUI_0.1.1.1   
+## [46] desc_1.4.3        pkgconfig_2.0.3   bslib_0.9.0      
+## [49] pillar_1.10.1     later_1.4.1       gtable_0.3.6     
+## [52] glue_1.8.0        profvis_0.4.0     Rcpp_1.0.14      
+## [55] xfun_0.51         tibble_3.2.1      tidyselect_1.2.1 
+## [58] rstudioapi_0.17.1 knitr_1.49        xtable_1.8-4     
+## [61] htmltools_0.5.8.1 rmarkdown_2.29    compiler_4.4.3   
+## [64] roxygen2_7.3.2</code></pre>
+</div>
+<div id="citation" class="section level2">
+<h2>📚 Citation</h2>
+<p>To cite the <code>fastfocal</code> package in publications, use:</p>
+<p>Wan, H.Y. (2025). fastfocal: Fast Multi-scale Raster Extraction and
+Moving Window Analysis with FFT. R package version X.X.X. <a href="https://github.com/hoyiwan/fastfocal" class="uri">https://github.com/hoyiwan/fastfocal</a></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">citation</span>(<span class="st">&quot;fastfocal&quot;</span>)</span></code></pre></div>
+<pre><code>## To cite package &#39;fastfocal&#39; in publications use:
+## 
+##   Wan H (2025). _fastfocal: fastfocal: Fast Multi-scale Raster
+##   Extraction and Moving Window Analysis with Fast Fourier
+##   Transform (FFT)_. R package version 0.1.0,
+##   &lt;https://github.com/hoyiwan/fastfocal&gt;.
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {fastfocal: fastfocal: Fast Multi-scale Raster Extraction and Moving Window
+## Analysis with Fast Fourier Transform (FFT)},
+##     author = {Ho Yi Wan},
+##     year = {2025},
+##     note = {R package version 0.1.0},
+##     url = {https://github.com/hoyiwan/fastfocal},
+##   }</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
