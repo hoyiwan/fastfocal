@@ -9,52 +9,43 @@
 #' @return Convolved and aligned result
 #' @export
 fft_convolve <- function(x, kernel, fun = "mean", na.rm = TRUE) {
-  x_mat <- as.matrix(x)
-  
-  # Replace NAs with 0 for FFT
+  # 1) Prepare matrix and NA mask
+  x_mat     <- as.matrix(x)
   x_na_mask <- is.na(x_mat)
   x_mat[x_na_mask] <- 0
   
-  # Zero-pad kernel to match x_mat dimensions
+  # 2) Compute padded size and normalization factor
   nr <- nrow(x_mat) + nrow(kernel) - 1
   nc <- ncol(x_mat) + ncol(kernel) - 1
+  norm_factor <- nr * nc
   
+  # 3) Zero‑pad input & kernel
   pad_x <- matrix(0, nr, nc)
   pad_k <- matrix(0, nr, nc)
-  pad_x[1:nrow(x_mat), 1:ncol(x_mat)] <- x_mat
+  pad_x[1:nrow(x_mat), 1:ncol(x_mat)]   <- x_mat
   pad_k[1:nrow(kernel), 1:ncol(kernel)] <- kernel
   
-  # FFT convolution
-  fft_x <- fft(pad_x)
-  fft_k <- fft(pad_k)
-  conv <- Re(fft(fft_x * fft_k, inverse = TRUE)) / length(fft_x)
+  # 4) FFTs and raw convolution
+  fft_x     <- fft(pad_x)
+  fft_k     <- fft(pad_k)
+  conv_full <- Re(fft(fft_x * fft_k, inverse = TRUE)) / norm_factor
   
-  # NA correction
-  if (na.rm) {
-    mask <- matrix(1, nrow = nrow(x_mat), ncol = ncol(x_mat))
-    mask[x_na_mask] <- 0
-    
-    pad_m <- matrix(0, nr, nc)
-    pad_m[1:nrow(mask), 1:ncol(mask)] <- mask
-    norm <- Re(fft(fft(pad_m) * fft_k, inverse = TRUE)) / length(fft_x)
-    
-    norm[norm == 0] <- NA  # Avoid divide-by-zero
-    if (fun == "mean") {
-      conv <- conv / norm
-    }
-  } else {
-    if (fun == "mean") {
-      conv <- conv / sum(kernel)
-    }
-  }
-  
-  # Align and crop to match input dimensions
+  # 5) Crop to “valid” region
   row_off <- floor(nrow(kernel) / 2)
   col_off <- floor(ncol(kernel) / 2)
-  result <- conv[
-    (row_off + 1):(row_off + nrow(x_mat)),
-    (col_off + 1):(col_off + ncol(x_mat))
-  ]
+  i1 <- row_off + 1; i2 <- row_off + nrow(x_mat)
+  j1 <- col_off + 1; j2 <- col_off + ncol(x_mat)
+  conv_crop <- conv_full[i1:i2, j1:j2]
   
-  return(t(result))
+  # 6) Apply summary function (mean or sum)
+  if (fun == "mean") {
+    conv_crop <- conv_crop / sum(kernel)
+  }
+  # (if fun == "sum", leave conv_crop as-is)
+  
+  # 7) Re‑introduce NAs in original input positions for both cases
+  conv_crop[x_na_mask] <- NA
+  
+  # 8) Return with same orientation
+  return(t(conv_crop))
 }
