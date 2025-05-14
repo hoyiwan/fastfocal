@@ -210,7 +210,7 @@ sessionInfo()
 
 To cite the `fastfocal` package in publications, use:
 
-Wan, H.Y. (2025). fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT. R package version X.X.X. https://github.com/hoyiwan/fastfocal
+Wan, H.Y. (2025). fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT. R package version 0.1.0. https://github.com/hoyiwan/fastfocal
 
 ```{r}
 citation("fastfocal")
