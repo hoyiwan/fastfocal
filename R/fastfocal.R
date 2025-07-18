@@ -38,8 +38,6 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
   
   # Capture and check unexpected arguments
   dots <- list(...)
-  
-  # Common argument mistakes and their suggested corrections
   arg_suggestions <- c(
     "window" = "w",
     "windows" = "w",
@@ -49,15 +47,13 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
     "function" = "fun",
     "stat" = "fun"
   )
-  
-  # Loop over the supplied arguments and issue warnings if any are mistyped
   for (arg in names(dots)) {
     if (arg %in% names(arg_suggestions)) {
       warning(sprintf("Unrecognized argument '%s'. Did you mean '%s'?", arg, arg_suggestions[[arg]]))
     }
   }
   
-  # Validate
+  # Validate window type
   if (!(w %in% valid_windows)) {
     stop("Invalid window type: '", w, "'. Must be one of: ",
          paste(valid_windows, collapse = ", "))
@@ -69,10 +65,9 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
       xi <- x[[i]]
       out_i <- fastfocal(xi, d = d, w = w, fun = fun, engine = engine, na.rm = na.rm, ...)
       names(out_i) <- names(x)[i]
-      return(out_i)
+      out_i
     })
-    out <- do.call(c, out_list)
-    return(out)
+    return(do.call(c, out_list))
   }
   
   # Auto-select engine
@@ -80,19 +75,24 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
     engine <- choose_engine(x, d, fun = fun)
   }
   
-  # Normalize kernel for mean and sum only
+  # Determine whether to normalize the kernel (only for mean)
   normalize_kernel <- (fun %in% c("mean"))
+  
+  # Build initial kernel (normalized if mean; raw counts if sum)
   kernel <- fastfocal_weights(x = x, d = d, w = w, normalize = normalize_kernel)
   
   if (engine == "fft") {
-    #if (interactive()) cat("Using FFT backend\\n")
+    mat <- matrix(terra::values(x),
+                  nrow = terra::nrow(x),
+                  ncol = terra::ncol(x),
+                  byrow = TRUE)
     
-    mat <- matrix(terra::values(x), nrow = terra::nrow(x), ncol = terra::ncol(x), byrow = TRUE)
+    # Rebuild the kernel once using the correct normalize flag
+    kernel <- fastfocal_weights(x = x, d = d, w = w, normalize = normalize_kernel)
     
     if (fun == "mean") {
       fft_mat <- fft_convolve(mat, kernel, fun = "mean", na.rm = na.rm)
     } else if (fun == "sum") {
-      kernel <- fastfocal_weights(x = x, d = d, w = w, normalize = na.rm)
       fft_mat <- fft_convolve(mat, kernel, fun = "sum", na.rm = na.rm)
     } else {
       stop("Only 'mean' and 'sum' are supported by the FFT backend. Use engine = 'cpp' for other functions.")
@@ -104,12 +104,10 @@ fastfocal <- function(x, d, w = "circle", fun = "mean", engine = "auto", na.rm =
     return(out)
     
   } else if (engine == "cpp") {
-    #if (interactive()) cat("Using terra::focal backend\\n")
-    
     fun_eval <- resolve_summary_function(fun)
     return(terra::focal(x, w = kernel, fun = fun_eval, na.rm = na.rm, ...))
     
   } else {
-    stop("Unsupported engine: must be 'auto', 'fft', or 'cpp'")
+    stop("Unsupported engine: must be 'auto', 'cpp', or 'fft'")
   }
 }
