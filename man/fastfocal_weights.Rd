@@ -7,27 +7,24 @@
 fastfocal_weights(x, d, w = "circle", normalize = TRUE, plot = FALSE)
 }
 \arguments{
-\item{x}{SpatRaster. Used to determine resolution.}
+\item{x}{SpatRaster (for resolution).}
 
-\item{d}{Radius in map units (e.g. meters).}
+\item{d}{numeric. Radius in map units.}
 
-\item{w}{Type of weight. One of:
-"rectangle", "circle", "gaussian", "pareto", "idw", "exponential",
-"triangular", "cosine", "logistic", "cauchy", "quartic", "epanechnikov".}
+\item{w}{character. "rectangle","circle","circular","gaussian","Gauss",
+"pareto","idw","exponential","triangular","cosine","logistic","cauchy",
+"quartic","epanechnikov".}
 
-\item{normalize}{Logical. Whether to normalize weights so they sum to 1. Default = TRUE.}
+\item{normalize}{logical. Normalize weights to sum to 1 (default TRUE).}
 
-\item{plot}{Logical. If TRUE, plots the resulting kernel. Default = FALSE.}
+\item{plot}{logical. If TRUE, plots the kernel.}
 }
 \value{
-A numeric matrix of focal weights.
+numeric matrix of weights.
 }
 \description{
-Generate weight matrix for focal operations using map units
-}
-\examples{
-library(terra)
-x <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
-values(x) <- runif(ncell(x))
-fastfocal_weights(x, d = 300, w = "gaussian", plot = TRUE)
+Builds an UNnormalized kernel from map units. Circle uses a center-distance
+rule (include a cell if its center is within radius \code{d}); other kernels follow
+the same definitions as before. For exact equality with terra's discrete
+circle, pass \code{w = terra::focalMat(x, d, type = "circle")} into \code{fastfocal()}.
 }
