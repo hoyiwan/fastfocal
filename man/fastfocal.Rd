@@ -4,36 +4,48 @@
 \alias{fastfocal}
 \title{Fast focal smoothing with FFT auto-switching}
 \usage{
-fastfocal(x, d, w = "circle", fun = "mean", engine = "auto", na.rm = TRUE, ...)
+fastfocal(
+  x,
+  d,
+  w = "circle",
+  fun = "mean",
+  engine = "auto",
+  na.rm = TRUE,
+  na.policy = c("omit", "all"),
+  pad = c("none", "auto"),
+  ...
+)
 }
 \arguments{
-\item{x}{SpatRaster. Input raster layer or multi-layer stack.}
+\item{x}{SpatRaster. Input raster (1+ layers).}
 
-\item{d}{Numeric. Radius or size of the smoothing window (in map units).}
+\item{d}{numeric. Radius/size in map units (ignored if \code{w} is a matrix).}
 
-\item{w}{Character. Type of window: one of
-"rectangle", "circle", "gaussian", "pareto", "idw", "exponential",
-"triangular", "cosine", "logistic", "cauchy", "quartic", or "epanechnikov".}
+\item{w}{character or numeric matrix. Window type, or a custom kernel matrix.}
 
-\item{fun}{Character. Function to apply: one of "mean", "sum", "min", "max", "sd", "median".}
+\item{fun}{character. "mean","sum","min","max","sd","median".}
 
-\item{engine}{Character. Either "auto" (default), "cpp", or "fft" to choose backend.}
+\item{engine}{character. "auto" (default), "cpp", or "fft".}
 
-\item{na.rm}{Logical. Remove NAs before applying function.}
+\item{na.rm}{logical. Remove NAs before applying the summary function.}
 
-\item{...}{Additional arguments passed to \code{\link[terra:focal]{terra::focal()}} if using the C++ backend.}
+\item{na.policy}{character. "omit" (default) leaves NA centers as NA; "all" fills centers when neighbors exist.}
+
+\item{pad}{character. "none" or "auto" (pad to next 5-smooth sizes for FFT).}
+
+\item{...}{Extra args to \code{\link[terra:focal]{terra::focal()}} for the C++ path.}
 }
 \value{
-A \link[terra:SpatRaster-class]{terra::SpatRaster} of the same dimensions as \code{x}, containing the focal-smoothed values.
+\link[terra:SpatRaster-class]{terra::SpatRaster} with same geometry as \code{x}.
 }
 \description{
-Applies a focal smoothing operation to a SpatRaster using either a C++ (via terra) or FFT backend.
-Supports a range of window types including rectangle, circle, gaussian, pareto, idw, and exponential.
+Applies a focal operation to a \code{SpatRaster} using either a C++ backend
+(via {terra}) or an FFT backend. Window types include rectangle, circle,
+gaussian, pareto, idw, exponential, triangular, cosine, logistic, cauchy,
+quartic, epanechnikov — or you may pass a numeric matrix as the kernel.
 }
-\examples{
-library(terra)
-x <- rast(nrows = 100, ncols = 100, xmin = 0, xmax = 3000, ymin = 0, ymax = 3000)
-values(x) <- runif(ncell(x))
-result <- fastfocal(x, d = 300, w = "circle", fun = "mean")
-plot(result)
+\details{
+The FFT backend uses masked convolution with proper NA semantics and can
+pad to "5-smooth" sizes for stable speed. With \code{engine="auto"}, the function
+chooses between C++ and FFT based on scale and FFT-friendliness.
 }
