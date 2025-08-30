@@ -1,3 +1,5 @@
+# fastfocal 0.1.1
+
 # fastfocal 0.1.0
 
 * Initial CRAN release.

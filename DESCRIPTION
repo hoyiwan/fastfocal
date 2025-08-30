@@ -1,7 +1,7 @@
 Package: fastfocal
 Type: Package
 Title: Fast Focal and Multi-Scale Raster Operations with Optional FFT
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
 Description: Fast moving-window ("focal") and buffered extraction for raster data using 'terra'. 
