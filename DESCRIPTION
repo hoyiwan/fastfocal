@@ -8,7 +8,7 @@ Description: Fast moving-window ("focal") and buffered extraction for raster dat
     Selects between a C++ backend (via 'terra') and a Fast Fourier Transform (FFT) backend 
     automatically based on problem size, with optional padding to FFT-friendly lengths. 
     Supports common window types (e.g., circle, rectangle, gaussian), summary functions 
-    (mean, sum, min, max, sd, median), and NA handling consistent with 'terra' 
+    (mean, sum, min, max, standard deviation, median), and NA handling consistent with 'terra' 
     via 'na.rm' and 'na.policy'. Operates on 'SpatRaster' objects and returns results 
     with the same geometry.
 License: MIT + file LICENSE
