@@ -1,9 +1,9 @@
 #' Fast focal smoothing with FFT auto-switching
 #'
 #' Applies a focal operation to a `SpatRaster` using either a C++ backend
-#' (via {terra}) or an FFT backend. Window types include rectangle, circle,
+#' (via \pkg{terra}) or an FFT backend. Window types include rectangle, circle,
 #' gaussian, pareto, idw, exponential, triangular, cosine, logistic, cauchy,
-#' quartic, epanechnikov — or you may pass a numeric matrix as the kernel.
+#' quartic, epanechnikov - or you may pass a numeric matrix as the kernel.
 #'
 #' The FFT backend uses masked convolution with proper NA semantics and can
 #' pad to "5-smooth" sizes for stable speed. With `engine="auto"`, the function
@@ -60,7 +60,7 @@ fastfocal <- function(
   if (!is_kernel_matrix && !(w %in% valid_windows)) {
     stop("Invalid window type: '", w, "'. Must be one of: ",
          paste(valid_windows, collapse = ", "),
-         " — or pass a numeric matrix as `w`.")
+         " - or pass a numeric matrix as `w`.")
   }
   
   # Multi-layer recursion
@@ -81,7 +81,7 @@ fastfocal <- function(
     engine <- choose_engine_smart(x, d, w = if (is_kernel_matrix) "rectangle" else w, fun = fun)
   }
   
-  # Build kernel (UNnormalized) — use matrix as given
+  # Build kernel (unnormalized) - use matrix as given
   if (is_kernel_matrix) {
     kernel <- w
     if (!is.numeric(kernel)) stop("Custom kernel matrix must be numeric.")

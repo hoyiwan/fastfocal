@@ -40,9 +40,9 @@ fastfocal(
 }
 \description{
 Applies a focal operation to a \code{SpatRaster} using either a C++ backend
-(via {terra}) or an FFT backend. Window types include rectangle, circle,
+(via \pkg{terra}) or an FFT backend. Window types include rectangle, circle,
 gaussian, pareto, idw, exponential, triangular, cosine, logistic, cauchy,
-quartic, epanechnikov — or you may pass a numeric matrix as the kernel.
+quartic, epanechnikov - or you may pass a numeric matrix as the kernel.
 }
 \details{
 The FFT backend uses masked convolution with proper NA semantics and can
