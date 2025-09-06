@@ -3,25 +3,25 @@ Type: Package
 Title: Fast Focal and Multi-Scale Raster Operations with Optional 'FFT'
 Version: 0.1.1
 Authors@R: 
-    c(person("Ho Yi", "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
-Description: Fast moving-window ("focal") and buffered extraction for raster data using the 'terra' package. 
-    Selects between a 'C++' backend (via the 'terra' package) and a Fast Fourier Transform ('FFT') backend 
-    automatically based on problem size, with optional padding to FFT-friendly lengths. 
-    Supports common window types (e.g., circle, rectangle, gaussian), summary functions 
-    (mean, sum, min, max, standard deviation, median), and NA handling consistent with 'terra' 
-    via 'na.rm' and 'na.policy'. Operates on 'SpatRaster' objects and returns results with the same geometry.
-    Methods references: Cooley and Tukey (1965) <doi:10.1090/S0025-5718-1965-0178586-1>; 
-    Hijmans (2024) "terra: Spatial Data Analysis" <https://CRAN.R-project.org/package=terra>.
+    c(person(given = "Ho Yi", family = "Wan", email = "hoyiwan@gmail.com", role = c("aut", "cre")))
+Description: Fast moving-window ("focal") and buffered extraction for raster data using the 'terra' package.
+    Automatically selects between a 'C++' backend (via 'terra') and a Fast Fourier Transform ('FFT') backend
+    based on problem size, with optional padding to FFT-friendly lengths. Supports common window types
+    (e.g., circle, rectangle, gaussian), summary functions (mean, sum, min, max, standard deviation, median),
+    and 'NA' handling consistent with 'terra' via 'na.rm' and 'na.policy'. Operates on 'SpatRaster' objects
+    and returns results with the same geometry.
+    References: Cooley and Tukey (1965) <doi:10.1090/S0025-5718-1965-0178586-1>;
+    Hijmans, R. J. (2024). 'terra' R package. <https://CRAN.R-project.org/package=terra>.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Depends: 
+Depends:
     R (>= 4.1.0)
-Imports: 
+Imports:
     terra,
     graphics,
     grDevices,
     stats
-Suggests: 
+Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
