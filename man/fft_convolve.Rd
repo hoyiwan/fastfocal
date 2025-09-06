@@ -2,22 +2,39 @@
 % Please edit documentation in R/fft_convolve.R
 \name{fft_convolve}
 \alias{fft_convolve}
-\title{2D FFT Convolution (terra-compatible, supports na.rm)}
+\title{2D FFT convolution (compatibility wrapper)}
 \usage{
 fft_convolve(x, kernel, fun = "mean", na.rm = TRUE)
 }
 \arguments{
-\item{x}{Matrix input}
+\item{x}{numeric matrix. Input values (rows x cols).}
 
-\item{kernel}{Smoothing kernel}
+\item{kernel}{numeric matrix. Unnormalized kernel (e.g., 0/1 circle).}
 
-\item{fun}{Character. Summary function name (e.g., "mean", "sum")}
+\item{fun}{character. "mean" or "sum".}
 
-\item{na.rm}{Logical. Whether to remove NAs in computation}
+\item{na.rm}{logical. If \code{TRUE}, ignore NAs under the kernel; if \code{FALSE},
+require a full valid box (terra-compatible gating).}
 }
 \value{
-Convolved and aligned result
+numeric matrix (rows x cols), aligned to \code{x} and oriented like
+\code{terra::values}, i.e., ready to be assigned back after \code{as.vector()}.
 }
 \description{
-Applies 2D convolution via FFT to a matrix using a kernel.
+Convenience wrapper that performs 2D convolution via FFT using the same
+NA semantics and padding strategy as \code{fastfocal(engine = "fft")}.
+}
+\details{
+Internally this delegates to the package's masked FFT implementation
+(box gating when \code{na.rm = FALSE}, support-based averaging when
+\code{na.rm = TRUE}), and pads to next 5-smooth lengths for stable speed.
+}
+\examples{
+m <- matrix(1:9, 3, 3)
+k <- matrix(1, 3, 3)
+fft_convolve(m, k, fun = "sum")
+
+# Mean with missing center:
+m_na <- m; m_na[2, 2] <- NA
+fft_convolve(m_na, k, fun = "mean", na.rm = TRUE)
 }

@@ -1,140 +1,146 @@
-#' Masked FFT convolution with next-fast-length padding
+#' Next 5-smooth length (internal)
 #'
-#' Performs 2D convolution via FFT with correct NA semantics by using a
-#' value mask and (optionally) padding each dimension to a "5-smooth"
-#' length (product of 2, 3, 5) for stable performance. Results are cropped
-#' to the original raster size and oriented to match \pkg{terra} values.
+#' Returns the smallest n' >= n whose prime factors are only 2, 3, and 5.
+#' Useful to stabilize FFT performance by avoiding large-prime sizes.
 #'
-#' @param mat Numeric matrix. Input raster values (rows × cols).
-#' @param kernel Numeric matrix. Focal weights (UNnormalized). Any non-binary
-#'   kernel is supported; for binary footprints (e.g., circle/rectangle) this
-#'   is typically 0/1.
-#' @param fun Character. One of \code{"mean"} or \code{"sum"}.
-#' @param na.rm Logical. If \code{TRUE}, ignore NAs; if \code{FALSE}, require
-#'   a fully valid window (any NA in window yields NA).
-#' @param na.policy Character. \code{"omit"} leaves NA centers as NA;
-#'   \code{"all"} fills NA centers when neighbors exist (gap-filling).
-#' @param pad Character. \code{"none"} or \code{"auto"} (pad to next 5-smooth
-#'   sizes). \code{"auto"} stabilizes speed on awkward sizes.
-#'
-#' @return Numeric matrix (rows × cols) aligned with \code{mat}, transposed
-#'   at the end to match \pkg{terra} value ordering used by \code{fastfocal()}.
-#'
+#' @param n integer length.
 #' @keywords internal
+#' @noRd
+next_fast_len <- function(n) {
+  n <- as.integer(n)
+  if (is.na(n) || n < 1L) return(1L)
+  is_fast <- function(x) {
+    y <- x
+    for (p in c(2L, 3L, 5L)) while (y %% p == 0L) y <- y %/% p
+    y == 1L
+  }
+  res <- n
+  while (!is_fast(res)) res <- res + 1L
+  res
+}
+
+# Internal: 2D FFT convolution with zero padding and valid-size crop
+# Ensures a real-valued (numeric) result via Re(iFFT).
+# @keywords internal
+# @noRd
+conv2_fft_ <- function(x, k, pad_nr, pad_nc) {
+  nr <- nrow(x); nc <- ncol(x)
+  kr <- nrow(k); kc <- ncol(k)
+  want_nr <- nr + kr - 1L
+  want_nc <- nc + kc - 1L
+  
+  X <- matrix(0, nrow = pad_nr, ncol = pad_nc)
+  K <- matrix(0, nrow = pad_nr, ncol = pad_nc)
+  X[1:nr, 1:nc] <- x
+  K[1:kr, 1:kc] <- k
+  
+  FX <- stats::fft(X)
+  FK <- stats::fft(K)
+  Cc <- stats::fft(FX * FK, inverse = TRUE) / (pad_nr * pad_nc)
+  
+  # take the real part to avoid complex tiny imaginaries
+  C <- Re(Cc)
+  
+  ro <- floor(kr / 2); co <- floor(kc / 2)
+  r1 <- ro + 1L; r2 <- ro + nr
+  c1 <- co + 1L; c2 <- co + nc
+  C[r1:r2, c1:c2, drop = FALSE]
+}
+
+#' Masked FFT convolution with NA handling (internal)
+#'
+#' NA semantics:
+#' - na.rm = TRUE: weighted mean/sum over available cells (kernel support only).
+#' - na.rm = FALSE, na.policy = "omit": NA if any NA inside the full kr x kc box.
+#' - na.rm = FALSE, na.policy = "all" : NA only if the entire box is missing.
+#'
+#' Returns a matrix aligned to the input and transposed at the end to match
+#' terra::values orientation used in fastfocal().
+#'
+#' @param x numeric matrix (rows x cols).
+#' @param kernel numeric matrix (unnormalized weights).
+#' @param fun character, "mean" or "sum".
+#' @param na.rm logical.
+#' @param na.policy character, "omit" or "all".
+#' @param pad character, "none" or "auto".
+#' @keywords internal
+#' @noRd
 #' @importFrom stats fft
-fft_convolve_masked <- function(mat, kernel, fun = c("mean","sum"),
-                                na.rm = TRUE, na.policy = c("omit","all"),
-                                pad = c("none","auto")) {
-  fun <- match.arg(fun)
+fft_convolve_masked <- function(x, kernel,
+                                fun = "mean",
+                                na.rm = TRUE,
+                                na.policy = c("omit", "all"),
+                                pad = c("none", "auto")) {
+  stopifnot(is.matrix(x), is.matrix(kernel))
   na.policy <- match.arg(na.policy)
   pad <- match.arg(pad)
   
-  nr <- nrow(mat); nc <- ncol(mat)
+  nr <- nrow(x); nc <- ncol(x)
   kr <- nrow(kernel); kc <- ncol(kernel)
   
-  # Value matrix (NA->0) and 0/1 validity mask for input
-  center_valid <- is.finite(mat)
-  V <- mat; V[!center_valid] <- 0
-  M <- matrix(0, nr, nc); M[center_valid] <- 1
+  # Valid mask and zero-filled values
+  mask <- is.finite(x)
+  xz <- x
+  xz[!mask] <- 0
   
-  # Linear convolution target and padding
-  tr <- nr + kr - 1; tc <- nc + kc - 1
-  if (pad == "auto") { pr <- next_fast_len(tr); pc <- next_fast_len(tc) } else { pr <- tr; pc <- tc }
+  # Padded sizes (for linear convolution)
+  want_nr <- nr + kr - 1L
+  want_nc <- nc + kc - 1L
+  pad_nr  <- if (pad == "auto") next_fast_len(want_nr) else want_nr
+  pad_nc  <- if (pad == "auto") next_fast_len(want_nc) else want_nc
   
-  pad_to <- function(A, r, c) { B <- matrix(0, r, c); B[seq_len(nrow(A)), seq_len(ncol(A))] <- A; B }
-  Vp <- pad_to(V, pr, pc)
-  Mp <- pad_to(M, pr, pc)
-  Kp <- pad_to(kernel, pr, pc)
+  # Convolutions:
+  #  - conv_val: values with the actual kernel
+  #  - conv_w  : sum of kernel weights at valid cells (for mean when na.rm=TRUE)
+  #  - conv_box: count of valid cells in a full kr x kc box (for gating when na.rm=FALSE)
+  conv_val <- conv2_fft_(xz, kernel, pad_nr, pad_nc)
   
-  # --- Two kernels: weighted for the sum, and NA-scope for the gating ---
-  # weighted kernel (actual operation)
-  G <- fft(Kp)
+  support_mask <- (kernel != 0) * 1
+  conv_w <- conv2_fft_(mask * 1, support_mask, pad_nr, pad_nc)
   
-  # NA scope kernel:
-  # - terra behavior: when na.rm = FALSE, ANY NA in the **whole box** (kr x kc) invalidates
-  # - when na.rm = TRUE, averages/sums ignore NAs only over the **support** of kernel (w != 0)
-  if (na.rm) {
-    K_scope <- (kernel != 0) * 1  # support mask
-    scope_mass <- sum(K_scope)
-  } else {
-    K_scope <- matrix(1, kr, kc)  # FULL BOX
-    scope_mass <- kr * kc
+  box <- matrix(1, nrow = kr, ncol = kc)
+  conv_box <- conv2_fft_(mask * 1, box, pad_nr, pad_nc)
+  full_box <- kr * kc
+  
+  out <- conv_val
+  
+  if (identical(fun, "mean")) {
+    # na.rm = TRUE: divide by weight sum on support
+    nz <- conv_w != 0
+    out[!nz] <- NA_real_
+    out[nz] <- out[nz] / conv_w[nz]
+  } else if (!identical(fun, "sum")) {
+    stop("fft_convolve_masked supports only 'mean' or 'sum'.")
   }
-  Ksp <- pad_to(K_scope, pr, pc)
-  Gscope <- fft(Ksp)
   
-  # FFTs
-  F <- fft(Vp)
-  H <- fft(Mp)
+  # Center NA handling
+  if (na.policy == "omit") {
+    out[!mask] <- NA_real_
+  }
   
-  # Convolutions
-  S_full <- Re(fft(F * G,      inverse = TRUE)) / (pr * pc)  # weighted sum over available values
-  C_full <- Re(fft(H * Gscope, inverse = TRUE)) / (pr * pc)  # count of available cells in NA-scope
-  
-  # Crop (linear conv) and center to original size
-  S_lin <- S_full[seq_len(tr), seq_len(tc)]
-  C_lin <- C_full[seq_len(tr), seq_len(tc)]
-  r_off <- floor((kr - 1) / 2); c_off <- floor((kc - 1) / 2)
-  r_idx <- (1:nr) + r_off; c_idx <- (1:nc) + c_off
-  S <- S_lin[r_idx, c_idx, drop = FALSE]
-  C <- C_lin[r_idx, c_idx, drop = FALSE]
-  
-  # Tolerance and clamping for FFT roundoff
-  tol <- 1e-8 * max(1, scope_mass)
-  Cc <- pmin(pmax(C, 0), scope_mass)
-  
-  out <- matrix(NA_real_, nr, nc)
-  
-  if (fun == "sum") {
-    if (na.rm) {
-      # sum over support, ignoring NAs (C is #valid cells in support)
-      out[] <- S
-    } else {
-      # only valid if the ENTIRE **box** has no NAs
-      full_ok <- (round(Cc) >= scope_mass)
-      out[full_ok] <- S[full_ok]
-    }
-  } else { # mean
-    if (na.rm) {
-      # average over valid cells in support
-      Cz <- Cc
-      Cz[Cz < tol] <- NA_real_
-      out[] <- S / Cz
-    } else {
-      # mean only if ENTIRE **box** has no NAs; divide by sum of (actual) kernel
-      ksum <- sum(kernel)
-      full_ok <- (round(Cc) >= scope_mass)
-      out[full_ok] <- S[full_ok] / ksum
+  # Gating for na.rm = FALSE
+  if (!na.rm) {
+    if (na.policy == "omit") {
+      # Require the full box to be valid
+      out[conv_box < full_box] <- NA_real_
+      if (identical(fun, "mean")) {
+        # When the box is fully valid, divide by sum(kernel) to match terra
+        ksum <- sum(kernel)
+        ok <- conv_box >= full_box
+        out[ok] <- out[ok] / ksum
+      }
+    } else { # na.policy == "all"
+      # Only require at least one valid cell in the box
+      out[conv_box == 0] <- NA_real_
+      if (identical(fun, "mean")) {
+        # Divide by sum(kernel) for mean when not removing NAs
+        ksum <- sum(kernel)
+        nz <- conv_box != 0
+        out[nz] <- out[nz] / ksum
+      }
     }
   }
   
-  # terra's na.policy="omit": keep NA centers as NA
-  if (na.policy == "omit") out[!center_valid] <- NA_real_
-  
-  # Keep orientation to match how fastfocal() writes values back
+  # Transpose to match terra::values orientation
   t(out)
-}
-
-#' Next 5-smooth (2·3·5) length for FFT padding
-#'
-#' Rounds \code{n} up to the next integer whose prime factors are only
-#' 2, 3, or 5. This size is typically fast for common FFT implementations.
-#'
-#' @param n Integer length.
-#' @param factors Integer vector of allowed prime factors (default 2, 3, 5).
-#'
-#' @return Integer >= \code{n} that is "5-smooth".
-#' @keywords internal
-next_fast_len <- function(n, factors = c(2L,3L,5L)) {
-  if (n <= 2L) return(2L)
-  k <- as.integer(n)
-  is_smooth <- function(x) {
-    y <- x
-    for (p in factors) {
-      while ((y %% p) == 0L) y <- y %/% p
-    }
-    y == 1L
-  }
-  while (!is_smooth(k)) k <- k + 1L
-  k
 }

@@ -23,7 +23,7 @@ fastfocal(
 
 \item{w}{character or numeric matrix. Window type, or a custom kernel matrix.}
 
-\item{fun}{character. "mean","sum","min","max","sd","median".}
+\item{fun}{character. One of "mean","sum","min","max","sd","median".}
 
 \item{engine}{character. "auto" (default), "cpp", or "fft".}
 
@@ -33,19 +33,27 @@ fastfocal(
 
 \item{pad}{character. "none" or "auto" (pad to next 5-smooth sizes for FFT).}
 
-\item{...}{Extra args to \code{\link[terra:focal]{terra::focal()}} for the C++ path.}
+\item{...}{Extra args to \code{\link[terra:focal]{terra::focal()}} for the 'C++' path.}
 }
 \value{
-\link[terra:SpatRaster-class]{terra::SpatRaster} with same geometry as \code{x}.
+\link[terra:SpatRaster-class]{terra::SpatRaster} with the same geometry as \code{x}.
 }
 \description{
-Applies a focal operation to a \code{SpatRaster} using either a C++ backend
-(via \pkg{terra}) or an FFT backend. Window types include rectangle, circle,
+Applies a focal operation to a \code{SpatRaster} using either a 'C++' backend
+(via \pkg{terra}) or an 'FFT' backend. Window types include rectangle, circle,
 gaussian, pareto, idw, exponential, triangular, cosine, logistic, cauchy,
 quartic, epanechnikov - or you may pass a numeric matrix as the kernel.
 }
 \details{
-The FFT backend uses masked convolution with proper NA semantics and can
-pad to "5-smooth" sizes for stable speed. With \code{engine="auto"}, the function
-chooses between C++ and FFT based on scale and FFT-friendliness.
+The 'FFT' backend uses masked convolution with proper NA semantics and can
+pad to "5-smooth" sizes for stable speed. With \code{engine = "auto"}, the function
+chooses between 'C++' and 'FFT' based on scale and FFT-friendliness.
+}
+\examples{
+# Tiny, fast example (no plotting, no side effects)
+library(terra)
+r <- rast(nrows = 10, ncols = 10, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+values(r) <- runif(ncell(r))
+out_mean <- fastfocal(r, d = 15, w = "circle", fun = "mean")
+out_sum  <- fastfocal(r, d = 15, w = "circle", fun = "sum")
 }

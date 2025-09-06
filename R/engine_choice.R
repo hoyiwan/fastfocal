@@ -1,36 +1,58 @@
-#' Choose engine with FFT-friendliness awareness
+#' Choose computation engine (internal)
 #'
-#' Heuristic that selects \code{"fft"} only when the target linear convolution
-#' size is large enough and the implied FFT padding is "friendly" (next 5-smooth
-#' sizes do not inflate area too much). Otherwise selects \code{"cpp"}.
+#' Heuristic to select "fft" vs "cpp" based on raster size, kernel size,
+#' and padding cost. Only `mean` and `sum` consider the FFT path. The kernel
+#' size is estimated from `d / res(x)` without building the kernel.
 #'
-#' @param x SpatRaster.
-#' @param d Numeric. Window radius/size in map units.
-#' @param w Character. Window type.
-#' @param fun Character. Summary function.
-#' @param min_pixels_fft Numeric. Minimum (n+k-1)*(m+k-1) area to consider FFT.
-#' @param min_kernel_fft Numeric. Minimum kernel area to consider FFT.
-#' @param max_pad_inflate Numeric. Max allowed area inflation from padding
-#'   (e.g., 1.25 allows up to +25%).
-#'
-#' @return \code{"fft"} or \code{"cpp"}.
+#' @param x SpatRaster. Input raster.
+#' @param d numeric. Kernel radius/size in map units.
+#' @param w character. Window type name (e.g., "circle"); used only to estimate support size.
+#' @param fun character. Summary function; FFT considered only for `mean` and `sum`.
+#' @param pad character. "auto" pads to next 5-smooth lengths; "none" uses exact sizes.
+#' @param min_pixels_fft numeric. Minimum padded conv area to consider FFT (default 5e6).
+#' @param min_kernel_fft numeric. Minimum kernel support (cells) to consider FFT (default 81).
+#' @param max_pad_inflate numeric. Maximum padding inflation ratio (e.g., 1.25 allows +25%).
+#' @return "fft" or "cpp".
 #' @keywords internal
-#' @importFrom terra nrow ncol
+#' @noRd
+
 choose_engine_smart <- function(x, d, w = "circle", fun = "mean",
+                                pad = "auto",
                                 min_pixels_fft = 5e6,
                                 min_kernel_fft = 81,
                                 max_pad_inflate = 1.25) {
-  if (!(fun %in% c("mean","sum"))) return("cpp")
+  # Only mean/sum benefit from the FFT path here
+  if (!fun %in% c("mean", "sum")) return("cpp")
   
-  nr <- terra::nrow(x); nc <- terra::ncol(x)
-  K <- fastfocal_weights(x = x, d = d, w = w, normalize = FALSE)
-  kr <- nrow(K); kc <- ncol(K)
+  # Basic geometry
+  nr <- as.integer(terra::nrow(x)); if (!is.finite(nr) || nr <= 0) return("cpp")
+  nc <- as.integer(terra::ncol(x)); if (!is.finite(nc) || nc <= 0) return("cpp")
   
-  tr <- nr + kr - 1; tc <- nc + kc - 1
-  next_r <- next_fast_len(tr); next_c <- next_fast_len(tc)
-  pad_ratio <- (next_r * next_c) / (tr * tc)
+  resv <- terra::res(x)[1]
+  if (!is.finite(resv) || resv <= 0) return("cpp")
   
-  big_enough <- (tr * tc) >= min_pixels_fft || (kr * kc) >= min_kernel_fft
+  # Kernel size in cells (square box that contains the window)
+  rad <- max(1L, as.integer(ceiling(d / resv)))
+  kr  <- 2L * rad + 1L
+  kc  <- kr
+  
+  # Approximate support size: circle uses pi * r^2, others use full box
+  if (is.character(w) && w %in% c("circle", "circular")) {
+    k_support <- as.numeric(pi) * (rad ^ 2)
+  } else {
+    k_support <- kr * kc
+  }
+  
+  # Linear convolution sizes and padded sizes
+  want_nr <- nr + kr - 1L
+  want_nc <- nc + kc - 1L
+  pad_nr  <- if (identical(pad, "auto")) next_fast_len(want_nr) else want_nr
+  pad_nc  <- if (identical(pad, "auto")) next_fast_len(want_nc) else want_nc
+  
+  pad_ratio <- (pad_nr * pad_nc) / (want_nr * want_nc)
+  
+  # Thresholds for "large enough" and "padding is friendly"
+  big_enough <- (want_nr * want_nc) >= min_pixels_fft || k_support >= min_kernel_fft
   friendly   <- pad_ratio <= max_pad_inflate
   
   if (big_enough && friendly) "fft" else "cpp"

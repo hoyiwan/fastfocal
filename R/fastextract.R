@@ -3,62 +3,87 @@
 #' Extracts summary statistics from a SpatRaster at point locations,
 #' optionally using buffered extraction with custom kernel windows.
 #'
-#' @param x SpatRaster. Input raster.
-#' @param y SpatVector. Points, polygons, etc.
-#' @param d Numeric or vector. Buffer radius/radii in map units.
-#' @param w Character. Window type for kernel: "circle", "rectangle", etc.
-#' @param fun Character or function. Summary function: "mean", "sum", "min", "max", "sd", "median".
-#' @param na.rm Logical. Whether to remove NAs.
+#' - If `d > 0`, a buffer of radius `d` (map units) is created around each point
+#'   and the summary is computed over raster cells intersecting the buffer.
+#' - If `d == 0`, values are taken at the point locations (no buffering).
+#' - If `y` is a polygon layer, the summary is computed over polygon areas.
 #'
-#' @return A data.frame of extracted values, one row per point per scale.
-#' 
+#' @param x SpatRaster. Input raster (single- or multi-layer).
+#' @param y SpatVector. Points or polygons.
+#' @param d numeric or numeric vector. Buffer radius/radii in map units.
+#' @param w character. Window type for the buffer kernel when `d > 0`
+#'   (currently passed through to \pkg{terra}; e.g., "circle", "rectangle").
+#' @param fun character or function. Summary function: "mean", "sum", "min",
+#'   "max", "sd", or "median"; or a user function.
+#' @param na.rm logical. Whether to remove NAs when computing summaries.
+#'
+#' @return A data.frame of extracted values. When `d` has multiple values,
+#'   rows are stacked by scale with a `scale_m` column indicating the radius.
+#'
 #' @export
-#' 
-#' @importFrom terra rast res values nrow ncol nlyr focal buffer extract vect geomtype
+#'
+#' @importFrom terra buffer extract geomtype rast res values nrow ncol nlyr vect
 #' @importFrom stats median sd
+#'
+#' @examples
+#' # Small, fast example (no plotting)
+#' library(terra)
+#' r <- rast(nrows = 10, ncols = 10, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+#' values(r) <- 1:ncell(r)
+#' pts <- vect(matrix(c(10,10, 50,50), ncol = 2, byrow = TRUE), type = "points", crs = crs(r))
+#' fastextract(r, pts, d = c(0, 20), w = "circle", fun = "mean")
 fastextract <- function(x, y, d = 0, w = "circle", fun = "mean", na.rm = TRUE) {
   if (!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
   if (!inherits(y, "SpatVector")) stop("y must be a SpatVector")
   
+  fun_eval <- switch(
+    if (is.character(fun)) tolower(fun) else "",
+    mean   = base::mean,
+    sum    = base::sum,
+    min    = base::min,
+    max    = base::max,
+    sd     = stats::sd,
+    median = stats::median,
+    { if (is.function(fun)) fun else NULL }
+  )
+  
+  do_one <- function(d_single) {
+    if (terra::geomtype(y)[1] == "polygons") {
+      if (is.null(fun_eval)) stop("Unsupported summary function for polygons: ", fun)
+      df <- terra::extract(x, y, fun = fun_eval, na.rm = na.rm, ID = FALSE)
+      
+    } else if (!is.null(d_single) && d_single > 0) {
+      if (is.null(fun_eval)) stop("Unsupported summary function for buffered extraction: ", fun)
+      buff <- terra::buffer(y, width = d_single)
+      df <- terra::extract(x, buff, fun = fun_eval, na.rm = na.rm, ID = FALSE)
+      
+    } else {
+      vals <- terra::extract(x, y, ID = FALSE)
+      if (is.null(fun_eval)) {
+        df <- as.data.frame(t(apply(vals, 1, function(row) {
+          vapply(row, function(z) fun(z, na.rm = na.rm), numeric(1))
+        })))
+        names(df) <- names(x)
+      } else {
+        df <- as.data.frame(vals)
+      }
+    }
+    df <- as.data.frame(df)
+    if ("ID" %in% names(df)) df <- df[, setdiff(names(df), "ID"), drop = FALSE]
+    df
+  }
+  
   if (length(d) > 1) {
     out_list <- lapply(d, function(di) {
-      df <- fastextract(x, y, d = di, w = w, fun = fun, na.rm = na.rm)
-      if ("ID" %in% names(df)) {
-        df <- df[, !(names(df) %in% "ID"), drop = FALSE]
-      }
-      df$scale_m <- di
-      df <- df[, c("scale_m", setdiff(names(df), "scale_m"))]
-      return(df)
+      df <- do_one(di)
+      df <- as.data.frame(df)
+      # prepend scale_m without passing check.names
+      df <- cbind(scale_m = di, df)
+      df
     })
     return(do.call(rbind, out_list))
   }
-  if (geomtype(y)[1] == "polygons") {
-    # Special case: user supplied a polygon layer
-    df <- terra::extract(x, y, fun = match.fun(fun), na.rm = na.rm, ID = TRUE)
-    
-    } else if (!is.null(d) && d > 0) {
-      buff <- terra::buffer(y, width = d)
-      df <- terra::extract(x, buff, fun = match.fun(fun), na.rm = na.rm)
-    
-      } else {
-        df <- terra::extract(x, y)[, -1, drop = FALSE]  # drop ID
-        fun_eval <- switch(
-          tolower(fun),
-          mean   = base::mean,
-          sum    = base::sum,
-          min    = base::min,
-          max    = base::max,
-          sd     = stats::sd,
-          median = stats::median,
-          stop("Unsupported summary function: ", fun)
-          )
-    
-    # Apply summary function per row, per column
-    df <- as.data.frame(t(apply(df, 1, function(row) {
-      vapply(row, function(x) fun_eval(x, na.rm = na.rm), numeric(1))
-    })))
-    names(df) <- names(x)
-  }
   
-  return(df)
+  do_one(d)
 }
+

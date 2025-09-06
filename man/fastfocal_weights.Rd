@@ -7,24 +7,33 @@
 fastfocal_weights(x, d, w = "circle", normalize = TRUE, plot = FALSE)
 }
 \arguments{
-\item{x}{SpatRaster (for resolution).}
+\item{x}{SpatRaster. Used to determine resolution (assumes square pixels).}
 
 \item{d}{numeric. Radius in map units.}
 
-\item{w}{character. "rectangle","circle","circular","gaussian","Gauss",
-"pareto","idw","exponential","triangular","cosine","logistic","cauchy",
-"quartic","epanechnikov".}
+\item{w}{character. One of:
+"rectangle","circle","circular","gaussian","Gauss","pareto","idw",
+"exponential","triangular","cosine","logistic","cauchy","quartic","epanechnikov".}
 
-\item{normalize}{logical. Normalize weights to sum to 1 (default TRUE).}
+\item{normalize}{logical. If \code{TRUE} (default), normalize weights so they sum to 1.}
 
-\item{plot}{logical. If TRUE, plots the kernel.}
+\item{plot}{logical. If \code{TRUE}, plots the kernel.}
 }
 \value{
-numeric matrix of weights.
+A numeric matrix of focal weights (unnormalized unless \code{normalize = TRUE}).
 }
 \description{
-Builds an UNnormalized kernel from map units. Circle uses a center-distance
-rule (include a cell if its center is within radius \code{d}); other kernels follow
-the same definitions as before. For exact equality with terra's discrete
-circle, pass \code{w = terra::focalMat(x, d, type = "circle")} into \code{fastfocal()}.
+Builds an unnormalized kernel from map units. The circular window uses a
+center-distance rule (a cell is included if its center lies within radius \code{d});
+other kernels follow the definitions below. For exact equality with the
+discrete circle produced by the \pkg{terra} package, you may alternatively
+pass \code{w = terra::focalMat(x, d, type = "circle")} directly into
+\code{\link[=fastfocal]{fastfocal()}}.
+}
+\examples{
+# Small, fast example (no plotting)
+library(terra)
+r <- rast(nrows = 9, ncols = 9, xmin = 0, xmax = 90, ymin = 0, ymax = 90)
+k <- fastfocal_weights(r, d = 30, w = "circle", normalize = TRUE)
+sum(k)  # equals 1 when normalize = TRUE
 }

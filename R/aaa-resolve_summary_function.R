@@ -1,37 +1,38 @@
-#' Resolve Summary Function for Focal Operations
+#' Resolve summary function (internal)
 #'
-#' Converts a summary function input (as a character or function) into either
-#' a recognized keyword (e.g., "mean") or an R function for use in `terra::focal()`.
+#' Converts a user-supplied summary selector into a value suitable for
+#' `terra::focal()`: either one of the keywords "mean","sum","min","max","sd","median",
+#' or an actual R function object.
 #'
-#' Supports standard summary functions including `"mean"`, `"sum"`, `"min"`, `"max"`,
-#' `"sd"`, and `"median"`. Custom functions can also be supplied directly.
-#'
-#' @param fun A character string or function. The name or definition of a summary function.
-#'
-#' @return A character string or function that can be passed to [terra::focal()].
-#' @export
-#'
-#' @importFrom stats median sd
+#' @param fun character or function. A single function name or a function.
+#' @return character (one of the six keywords) or a function object.
+#' @keywords internal
+#' @noRd
 resolve_summary_function <- function(fun) {
-  valid_strings <- c("mean", "sum", "min", "max", "sd", "median")
+  # If a function was supplied, accept it directly.
+  if (is.function(fun)) return(fun)
   
-  if (is.character(fun)) {
-    fun <- tolower(fun)
-    
-    if (fun %in% valid_strings) {
-      return(fun)
-    }
-    
-    if (exists(fun, mode = "function", inherits = TRUE)) {
-      return(get(fun, mode = "function", inherits = TRUE))
-    }
-    
-    stop(sprintf("Unsupported summary function: '%s'. Must be one of: %s",
-                 fun, paste(valid_strings, collapse = ", ")))
-    
-  } else if (is.function(fun)) {
-    return(fun)
-  } else {
-    stop("`fun` must be a character string or a function.")
+  # Otherwise require a single string.
+  if (!is.character(fun) || length(fun) != 1L) {
+    stop("`fun` must be a single character string or a function.")
   }
+  
+  key <- tolower(trimws(fun))
+  allowed <- c("mean", "sum", "min", "max", "sd", "median")
+  
+  # Prefer the well-known keywords — terra accepts these strings.
+  if (key %in% allowed) {
+    return(key)
+  }
+  
+  # Fallback: if a function of that name exists in scope, return it.
+  if (exists(key, mode = "function", inherits = TRUE)) {
+    return(get(key, mode = "function", inherits = TRUE))
+  }
+  
+  stop(
+    "Unsupported summary function: '", fun,
+    "'. Use one of: ", paste(allowed, collapse = ", "),
+    "; or supply a function."
+  )
 }

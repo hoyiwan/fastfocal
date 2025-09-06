@@ -7,22 +7,41 @@
 fastextract(x, y, d = 0, w = "circle", fun = "mean", na.rm = TRUE)
 }
 \arguments{
-\item{x}{SpatRaster. Input raster.}
+\item{x}{SpatRaster. Input raster (single- or multi-layer).}
 
-\item{y}{SpatVector. Points, polygons, etc.}
+\item{y}{SpatVector. Points or polygons.}
 
-\item{d}{Numeric or vector. Buffer radius/radii in map units.}
+\item{d}{numeric or numeric vector. Buffer radius/radii in map units.}
 
-\item{w}{Character. Window type for kernel: "circle", "rectangle", etc.}
+\item{w}{character. Window type for the buffer kernel when \code{d > 0}
+(currently passed through to \pkg{terra}; e.g., "circle", "rectangle").}
 
-\item{fun}{Character or function. Summary function: "mean", "sum", "min", "max", "sd", "median".}
+\item{fun}{character or function. Summary function: "mean", "sum", "min",
+"max", "sd", or "median"; or a user function.}
 
-\item{na.rm}{Logical. Whether to remove NAs.}
+\item{na.rm}{logical. Whether to remove NAs when computing summaries.}
 }
 \value{
-A data.frame of extracted values, one row per point per scale.
+A data.frame of extracted values. When \code{d} has multiple values,
+rows are stacked by scale with a \code{scale_m} column indicating the radius.
 }
 \description{
 Extracts summary statistics from a SpatRaster at point locations,
 optionally using buffered extraction with custom kernel windows.
+}
+\details{
+\itemize{
+\item If \code{d > 0}, a buffer of radius \code{d} (map units) is created around each point
+and the summary is computed over raster cells intersecting the buffer.
+\item If \code{d == 0}, values are taken at the point locations (no buffering).
+\item If \code{y} is a polygon layer, the summary is computed over polygon areas.
+}
+}
+\examples{
+# Small, fast example (no plotting)
+library(terra)
+r <- rast(nrows = 10, ncols = 10, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+values(r) <- 1:ncell(r)
+pts <- vect(matrix(c(10,10, 50,50), ncol = 2, byrow = TRUE), type = "points", crs = crs(r))
+fastextract(r, pts, d = c(0, 20), w = "circle", fun = "mean")
 }

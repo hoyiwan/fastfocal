@@ -1,51 +1,45 @@
-#' 2D FFT Convolution (terra-compatible, supports na.rm)
+#' 2D FFT convolution (compatibility wrapper)
 #'
-#' Applies 2D convolution via FFT to a matrix using a kernel.
+#' Convenience wrapper that performs 2D convolution via FFT using the same
+#' NA semantics and padding strategy as `fastfocal(engine = "fft")`.
 #'
-#' @param x Matrix input
-#' @param kernel Smoothing kernel
-#' @param fun Character. Summary function name (e.g., "mean", "sum")
-#' @param na.rm Logical. Whether to remove NAs in computation
-#' @return Convolved and aligned result
+#' Internally this delegates to the package's masked FFT implementation
+#' (box gating when `na.rm = FALSE`, support-based averaging when
+#' `na.rm = TRUE`), and pads to next 5-smooth lengths for stable speed.
+#'
+#' @param x numeric matrix. Input values (rows x cols).
+#' @param kernel numeric matrix. Unnormalized kernel (e.g., 0/1 circle).
+#' @param fun character. "mean" or "sum".
+#' @param na.rm logical. If `TRUE`, ignore NAs under the kernel; if `FALSE`,
+#'   require a full valid box (terra-compatible gating).
+#' @return numeric matrix (rows x cols), aligned to `x` and oriented like
+#'   `terra::values`, i.e., ready to be assigned back after `as.vector()`.
 #' @export
+#' @examples
+#' m <- matrix(1:9, 3, 3)
+#' k <- matrix(1, 3, 3)
+#' fft_convolve(m, k, fun = "sum")
+#'
+#' # Mean with missing center:
+#' m_na <- m; m_na[2, 2] <- NA
+#' fft_convolve(m_na, k, fun = "mean", na.rm = TRUE)
 fft_convolve <- function(x, kernel, fun = "mean", na.rm = TRUE) {
-  # 1) Prepare matrix and NA mask
-  x_mat     <- as.matrix(x)
-  x_na_mask <- is.na(x_mat)
-  x_mat[x_na_mask] <- 0
+  # Basic checks and normalization of inputs
+  x <- as.matrix(x)
+  kernel <- as.matrix(kernel)
   
-  # 2) Compute padded size and normalization factor
-  nr <- nrow(x_mat) + nrow(kernel) - 1
-  nc <- ncol(x_mat) + ncol(kernel) - 1
-  norm_factor <- nr * nc
-  
-  # 3) Zero‑pad input & kernel
-  pad_x <- matrix(0, nr, nc)
-  pad_k <- matrix(0, nr, nc)
-  pad_x[1:nrow(x_mat), 1:ncol(x_mat)]   <- x_mat
-  pad_k[1:nrow(kernel), 1:ncol(kernel)] <- kernel
-  
-  # 4) FFTs and raw convolution
-  fft_x     <- fft(pad_x)
-  fft_k     <- fft(pad_k)
-  conv_full <- Re(fft(fft_x * fft_k, inverse = TRUE)) / norm_factor
-  
-  # 5) Crop to “valid” region
-  row_off <- floor(nrow(kernel) / 2)
-  col_off <- floor(ncol(kernel) / 2)
-  i1 <- row_off + 1; i2 <- row_off + nrow(x_mat)
-  j1 <- col_off + 1; j2 <- col_off + ncol(x_mat)
-  conv_crop <- conv_full[i1:i2, j1:j2]
-  
-  # 6) Apply summary function (mean or sum)
-  if (fun == "mean") {
-    conv_crop <- conv_crop / sum(kernel)
+  if (!fun %in% c("mean", "sum")) {
+    stop("`fun` must be either 'mean' or 'sum'.")
   }
-  # (if fun == "sum", leave conv_crop as-is)
   
-  # 7) Re‑introduce NAs in original input positions for both cases
-  conv_crop[x_na_mask] <- NA
-  
-  # 8) Return with same orientation
-  return(t(conv_crop))
+  # Delegate to the masked FFT with stable padding and terra-compatible NA policy.
+  # We use na.policy = "omit" here to mirror typical terra usage and the package defaults.
+  fft_convolve_masked(
+    x       = x,
+    kernel  = kernel,
+    fun     = fun,
+    na.rm   = na.rm,
+    na.policy = "omit",
+    pad     = "auto"
+  )
 }

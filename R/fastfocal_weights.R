@@ -1,49 +1,61 @@
 #' Generate weight matrix for focal operations using map units
 #'
-#' Builds an UNnormalized kernel from map units. Circle uses a center-distance
-#' rule (include a cell if its center is within radius `d`); other kernels follow
-#' the same definitions as before. For exact equality with terra's discrete
-#' circle, pass `w = terra::focalMat(x, d, type = "circle")` into `fastfocal()`.
+#' Builds an unnormalized kernel from map units. The circular window uses a
+#' center-distance rule (a cell is included if its center lies within radius `d`);
+#' other kernels follow the definitions below. For exact equality with the
+#' discrete circle produced by the \pkg{terra} package, you may alternatively
+#' pass `w = terra::focalMat(x, d, type = "circle")` directly into
+#' [fastfocal()].
 #'
-#' @param x SpatRaster (for resolution).
+#' @param x SpatRaster. Used to determine resolution (assumes square pixels).
 #' @param d numeric. Radius in map units.
-#' @param w character. "rectangle","circle","circular","gaussian","Gauss",
-#'   "pareto","idw","exponential","triangular","cosine","logistic","cauchy",
-#'   "quartic","epanechnikov".
-#' @param normalize logical. Normalize weights to sum to 1 (default TRUE).
-#' @param plot logical. If TRUE, plots the kernel.
-#' @return numeric matrix of weights.
+#' @param w character. One of:
+#'   "rectangle","circle","circular","gaussian","Gauss","pareto","idw",
+#'   "exponential","triangular","cosine","logistic","cauchy","quartic","epanechnikov".
+#' @param normalize logical. If `TRUE` (default), normalize weights so they sum to 1.
+#' @param plot logical. If `TRUE`, plots the kernel.
+#'
+#' @return A numeric matrix of focal weights (unnormalized unless `normalize = TRUE`).
 #' @export
-#' @importFrom terra res
+#'
+#' @importFrom terra res rast
 #' @importFrom graphics image
 #' @importFrom grDevices hcl.colors
+#'
+#' @examples
+#' # Small, fast example (no plotting)
+#' library(terra)
+#' r <- rast(nrows = 9, ncols = 9, xmin = 0, xmax = 90, ymin = 0, ymax = 90)
+#' k <- fastfocal_weights(r, d = 30, w = "circle", normalize = TRUE)
+#' sum(k)  # equals 1 when normalize = TRUE
 fastfocal_weights <- function(x, d, w = "circle", normalize = TRUE, plot = FALSE) {
   if (!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
   stopifnot(d > 0)
   
   res_val <- terra::res(x)[1]  # assumes square pixels
   cell_radius <- ceiling(d / res_val)
-  size <- 2L * cell_radius + 1L
+  size   <- 2L * cell_radius + 1L
   center <- ceiling(size / 2)
   
   mat <- matrix(0, nrow = size, ncol = size)
   
-  # Precompute center distances for speed
+  # Precompute center distances
   ii <- matrix(rep(seq_len(size), size), nrow = size)
   jj <- t(ii)
   dx <- (ii - center) * res_val
   dy <- (jj - center) * res_val
-  dist <- sqrt(dx*dx + dy*dy)
+  dist <- sqrt(dx * dx + dy * dy)
   
   if (w %in% c("rectangle")) {
-    mat[,] <- 1
-  } else if (w %in% c("circle","circular")) {
+    mat[] <- 1
+  } else if (w %in% c("circle", "circular")) {
     mat[dist <= d] <- 1
   } else if (w == "gaussian" || w == "Gauss") {
     sigma <- d / 3
     mat <- exp(-(dist^2) / (2 * sigma^2))
   } else if (w == "pareto") {
-    mat[dist <= d] <- (1 + dist[dist <= d] / (d / 3))^-2
+    inside <- dist <= d
+    mat[inside] <- (1 + dist[inside] / (d / 3))^-2
   } else if (w == "idw") {
     mat[dist == 0] <- 1
     inside <- dist > 0 & dist <= d
@@ -79,8 +91,11 @@ fastfocal_weights <- function(x, d, w = "circle", normalize = TRUE, plot = FALSE
   }
   
   if (plot) {
-    graphics::image(mat, main = paste("fastfocal_weights:", w),
-                    col = grDevices::hcl.colors(20, "YlOrRd", rev = TRUE))
+    graphics::image(
+      mat,
+      main = paste("fastfocal_weights:", w),
+      col = grDevices::hcl.colors(20, "YlOrRd", rev = TRUE)
+    )
   }
   
   mat
