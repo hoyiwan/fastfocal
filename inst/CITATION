@@ -3,11 +3,10 @@ citHeader("To cite fastfocal in publications, please use:")
 bibentry(
   bibtype = "Manual",
   title   = "fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT",
-  author  = person(given = c("Ho", "Yi"), , family = "Wan"),
+  author  = person(given = c("Ho", "Yi"), family = "Wan"),
   year    = "2025",
   note    = "R package version 0.1.1",
   doi     = "10.5281/zenodo.17074691",
   url     = "https://hoyiwan.github.io/fastfocal/",
   publisher = "Zenodo"
 )
-
