@@ -1,24 +1,12 @@
 # fastfocal 0.1.1
 
+* First public release (submitted to CRAN).
+* Added Zenodo DOI and updated citation information.
+* Updated vignettes (`index.Rmd` and `benchmark.Rmd`) with correct version numbers and DOI.
+* Clarified that the FFT backend supports only `sum` and `mean`; other statistics handled by the `terra` backend.
+* README and DESCRIPTION updated for consistency (license MIT, DOI, installation instructions).
+* Added `inst/CITATION` file so that `citation("fastfocal")` prints the DOI and pkgdown URL.
+
 # fastfocal 0.1.0
 
-* Initial CRAN release.
-
-## Features
-- Fast focal / moving-window operations for `SpatRaster` with **auto engine**:
-  C++ via `terra` for small windows, **FFT** for large.
-- **NA handling matches `terra`**:
-  - `na.rm = FALSE` uses full-box gating (any NA in the kr×kc box → NA).
-  - `na.rm = TRUE` averages over available cells in the kernel support.
-  - `na.policy = "omit"` or `"all"` supported; center NA behavior aligned with `terra`.
-- **Kernel support**: `"circle"`, `"rectangle"`, `"gaussian"`, `"pareto"`, `"idw"`,
-  `"exponential"`, `"triangular"`, `"cosine"`, `"logistic"`, `"cauchy"`,
-  `"quartic"`, `"epanechnikov"`, or pass a **numeric matrix** as the kernel.
-- **FFT padding (`pad = "auto"`)** to avoid prime-factor slowdowns; uses next-fast length.
-- Smarter `engine="auto"` heuristic; accepts multi-layer rasters.
-
-## Extraction
-- `fastextract()` for points/polygons with optional buffer radii; returns tidy summaries.
-
-## Docs
-- Two vignettes (overview + benchmarks). Heavy benchmark chunks are disabled for CRAN.
+* Internal development version (not submitted to CRAN).

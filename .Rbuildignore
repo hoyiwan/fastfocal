@@ -5,8 +5,8 @@
 ^Meta$
 ^docs$
 ^vignettes/\\.build\\.timestamp$
-
 ^LICENSE\.md$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^\.github$
+^CITATION\.cff$

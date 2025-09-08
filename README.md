@@ -2,6 +2,7 @@
 
 [![CRAN Status](https://www.r-pkg.org/badges/version/fastfocal)](https://CRAN.R-project.org/package=fastfocal)
 [![R-CMD-check](https://github.com/hoyiwan/fastfocal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hoyiwan/fastfocal/actions)
+[![DOI](https://zenodo.org/badge/961060307.svg)](https://doi.org/10.5281/zenodo.17074691)
 
 **fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R**
 
@@ -9,15 +10,15 @@
 
 ---
 
-## 🚀 Installation
+## Installation
 
-Install the released version from [CRAN](https://cran.r-project.org/package=fastfocal):
+Once accepted on CRAN, you will be able to install the stable release with:
 
 ```r
 install.packages("fastfocal")
 ```
 
-Or install the development version from GitHub:
+Until then, you can install the development version from GitHub:
 
 ```r
 # install.packages("remotes")
@@ -26,19 +27,20 @@ remotes::install_github("hoyiwan/fastfocal")
 
 ---
 
-## 📦 Overview
+## Overview
 
 This package includes:
 
-- `fastfocal()` — fast moving window smoothing with support for mean, sum, min, max, sd, and median
-- `fastextract()` — fast extraction of raster values at point or buffer locations
-- `fastfocal_weights()` — utility for generating spatial weight matrices (circular, Gaussian, etc.)
-- Auto-switch backend to FFT for large windows to improve performance
-- Native support for `terra::SpatRaster` and `terra::SpatVector` objects
+- `fastfocal()` — fast moving-window smoothing with support for mean, sum, min, max, sd, and median  
+- `fastextract()` — fast extraction of raster values at point or buffer locations  
+- `fastfocal_weights()` — utility for generating spatial weight matrices (circular, Gaussian, etc.)  
+- Auto-switch backend to FFT for large windows to improve performance  
+  - FFT backend currently supports **sum** and **mean**; other statistics use the `terra` backend  
+- Native support for `terra::SpatRaster` and `terra::SpatVector` objects  
 
 ---
 
-## 🔧 Example Usage
+## Example Usage
 
 ```r
 library(fastfocal)
@@ -55,23 +57,23 @@ smoothed <- fastfocal(r, d = 300, w = "circle", fun = "mean")
 plot(smoothed)
 ```
 
-Or for weighted extraction at points:
+Weighted extraction at points:
 
 ```r
 # Create SpatVector of points
 pts <- vect(data.frame(x = c(500, 1500), y = c(500, 2500)), geom = c("x", "y"), crs = crs(r))
 
-# Extract raster values in 500m buffers around points
+# Extract raster values in 500 m buffers around points
 result <- fastextract(r, pts, d = 500, fun = "mean")
 print(result)
 ```
 
 ---
 
-## 📖 Vignettes
+## Vignettes
 
-- [📘 Introduction (Index)](https://hoyiwan.github.io/fastfocal/index.html)
-- [⏱ Benchmark: fastfocal vs terra::focal](https://hoyiwan.github.io/fastfocal/benchmark.html)
+- [Introduction (Index)](https://hoyiwan.github.io/fastfocal/index.html)  
+- [Benchmark: fastfocal vs terra::focal](https://hoyiwan.github.io/fastfocal/benchmark.html)  
 
 You can also access them from R using:
 
@@ -81,15 +83,33 @@ vignette("index", package = "fastfocal")
 
 ---
 
-## 📄 License
+## License
 
-This package is licensed under **GPL-3**.
+This package is licensed under the **MIT License** (see the [LICENSE](LICENSE) file).
 
 ---
 
-## 📚 Citation
+## Citation
 
-If you use `fastfocal` in published work, please cite it using:
+If you use `fastfocal` in published work, please cite it as:
+
+> Ho Yi Wan (2025). *fastfocal: A fast, energy-efficient R package for focal raster operations*. Version v0.1.1. Zenodo. https://doi.org/10.5281/zenodo.17074691
+
+Or use the BibTeX entry:
+
+```bibtex
+@software{wan_fastfocal_2025,
+  author       = {Ho Yi Wan},
+  title        = {fastfocal: A fast, energy-efficient R package for focal raster operations},
+  version      = {v0.1.1},
+  year         = {2025},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.17074691},
+  url          = {https://doi.org/10.5281/zenodo.17074691}
+}
+```
+
+You can also run:
 
 ```r
 citation("fastfocal")
@@ -97,14 +117,13 @@ citation("fastfocal")
 
 ---
 
-## 🛠️ Author
+## Author
 
-**Ho Yi Wan**   
-
-📧 hoyiwan@gmail.com
+**Ho Yi Wan**  
+hoyiwan@gmail.com  
 
 ---
 
-## 🙌 Acknowledgments
+## Acknowledgments
 
 Built to support large-scale ecological analysis, high-performance raster processing, and reproducible landscape research workflows.
