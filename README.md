@@ -1,4 +1,4 @@
-# fastfocal <img src="https://raw.githubusercontent.com/hoyiwan/fastfocal/main/man/figures/logo.png" align="right" height="120" />
+# fastfocal
 
 [![CRAN Status](https://www.r-pkg.org/badges/version/fastfocal)](https://CRAN.R-project.org/package=fastfocal)
 [![R-CMD-check](https://github.com/hoyiwan/fastfocal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hoyiwan/fastfocal/actions)
