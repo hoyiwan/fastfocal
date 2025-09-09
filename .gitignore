@@ -1,7 +1,35 @@
+cat > .gitignore <<'EOF'
+# R & RStudio
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-inst/doc
+.Rapp.history
+.Rprofile
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# R package build artifacts
+*.tar.gz
+*.Rcheck/
+src/*.o
+src/*.so
+src/*.dll
+
+# Vignette outputs (keep sources under vignettes/)
+vignettes/*.html
+vignettes/*.pdf
+
+# Built vignettes/docs (we don't track the built copies)
+inst/doc/
+
+# renv/packrat caches (if used)
+renv/library/
+packrat/
+EOF
+
 /Meta/
 /doc/

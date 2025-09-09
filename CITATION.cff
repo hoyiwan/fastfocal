@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT"
+version: "v0.1.2"
+doi: "10.5281/zenodo.17074691"
+date-released: 2025-09-09
+authors:
+  - family-names: "Wan"
+    given-names: "Ho Yi"
+    email: "hoyiwan@gmail.com"
+repository-code: "https://github.com/hoyiwan/fastfocal"
+license: "MIT"
+type: software
+keywords:
+  - R
+  - focal statistics
+  - FFT
+  - big data
+  - sustainability
+  - large raster

@@ -38,10 +38,17 @@ and the summary is computed over raster cells intersecting the buffer.
 }
 }
 \examples{
-# Small, fast example (no plotting)
-library(terra)
-r <- rast(nrows = 10, ncols = 10, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
-values(r) <- 1:ncell(r)
-pts <- vect(matrix(c(10,10, 50,50), ncol = 2, byrow = TRUE), type = "points", crs = crs(r))
-fastextract(r, pts, d = c(0, 20), w = "circle", fun = "mean")
+r <- terra::rast(nrows = 10, ncols = 10, xmin = 0, xmax = 100, ymin = 0, ymax = 100)
+terra::values(r) <- seq_len(terra::ncell(r))
+
+pts <- terra::vect(
+  matrix(c(10, 10,
+           50, 50), ncol = 2, byrow = TRUE),
+  type = "points",
+  crs  = terra::crs(r)
+)
+
+# Mean over a 20-unit circular neighborhood around each point
+res <- fastextract(r, pts, d = 20, w = "circle", fun = "mean")
+head(res)
 }

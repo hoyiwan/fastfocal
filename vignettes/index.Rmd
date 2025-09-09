@@ -1,6 +1,6 @@
 ---
 title: "fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT"
-subtitle: "Version 0.1.1 (2025)"
+subtitle: "Version 0.1.2 (2025)"
 author: "Ho Yi Wan"
 output: rmarkdown::html_vignette
 bibliography: references.bib
@@ -201,7 +201,7 @@ sessionInfo()
 
 To cite the package:
 
-Wan, H. Y. (2025). *fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT*. R package version 0.1.1. Zenodo. https://doi.org/10.5281/zenodo.17074691
+Wan, H. Y. (2025). *fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT*. R package version 0.1.2. Zenodo. https://doi.org/10.5281/zenodo.17074691
 
 
 ```{r}

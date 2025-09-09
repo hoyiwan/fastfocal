@@ -7,33 +7,43 @@
 fastfocal_weights(x, d, w = "circle", normalize = TRUE, plot = FALSE)
 }
 \arguments{
-\item{x}{SpatRaster. Used to determine resolution (assumes square pixels).}
+\item{x}{SpatRaster (used for resolution; assumes square pixels).}
 
-\item{d}{numeric. Radius in map units.}
+\item{d}{numeric. Radius in map units for most kernels; \strong{sigma} (σ) in map units for "gaussian"/"Gauss".}
 
 \item{w}{character. One of:
 "rectangle","circle","circular","gaussian","Gauss","pareto","idw",
 "exponential","triangular","cosine","logistic","cauchy","quartic","epanechnikov".}
 
-\item{normalize}{logical. If \code{TRUE} (default), normalize weights so they sum to 1.}
+\item{normalize}{logical. If TRUE (default), scale weights to sum to 1.}
 
-\item{plot}{logical. If \code{TRUE}, plots the kernel.}
+\item{plot}{logical. If TRUE, plots the kernel.}
 }
 \value{
-A numeric matrix of focal weights (unnormalized unless \code{normalize = TRUE}).
+numeric matrix of weights.
 }
 \description{
-Builds an unnormalized kernel from map units. The circular window uses a
-center-distance rule (a cell is included if its center lies within radius \code{d});
-other kernels follow the definitions below. For exact equality with the
-discrete circle produced by the \pkg{terra} package, you may alternatively
-pass \code{w = terra::focalMat(x, d, type = "circle")} directly into
-\code{\link[=fastfocal]{fastfocal()}}.
+Builds an unnormalized (or normalized) kernel from map units.
+Circle uses a center-distance rule (include if center <= d).
+\strong{Gaussian interprets d as sigma (σ) in map units and truncates at 3σ},
+matching terra::focalMat(..., type = "Gauss").
 }
 \examples{
-# Small, fast example (no plotting)
-library(terra)
-r <- rast(nrows = 9, ncols = 9, xmin = 0, xmax = 90, ymin = 0, ymax = 90)
-k <- fastfocal_weights(r, d = 30, w = "circle", normalize = TRUE)
-sum(k)  # equals 1 when normalize = TRUE
+# Small raster (resolution = 1 map unit)
+r <- terra::rast(nrows = 5, ncols = 5, xmin = 0, xmax = 5, ymin = 0, ymax = 5)
+
+# Circle: d is a radius in map units -> here cell_radius = 2 -> 5x5 kernel
+Kc <- fastfocal_weights(r, d = 2, w = "circle", normalize = TRUE)
+dim(Kc)            # 5 x 5
+round(sum(Kc), 6)  # ~1
+
+# Gaussian: d is sigma (σ) in map units, truncated at 3σ
+Kg <- fastfocal_weights(r, d = 1, w = "gaussian", normalize = TRUE)
+dim(Kg)            # 7 x 7 (since 2*ceil(3*σ) + 1)
+round(sum(Kg), 6)  # ~1
+
+# \donttest{
+# Quick visualization (kept out of CRAN's main run)
+fastfocal_weights(r, d = 2, w = "circle", normalize = TRUE, plot = TRUE)
+# }
 }

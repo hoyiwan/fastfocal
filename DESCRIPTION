@@ -1,11 +1,13 @@
 Package: fastfocal
 Type: Package
 Title: Fast Multi-Scale Raster Extraction and Moving Window Analysis with 'FFT'
-Version: 0.1.1
-Date: 2025-09-07
+Version: 0.1.2
+Date: 2025-09-09
 Authors@R: 
-    c(person(given = c("Ho", "Yi"), family = "Wan", 
-             email = "hoyiwan@gmail.com", role = c("aut", "cre")))
+    c(person(given = c("Ho", "Yi"), family = "Wan",
+             role = c("aut", "cre"),
+             email = "hoyiwan@gmail.com",
+             comment = c(ORCID = "0000-0002-2146-8257")))
 Description: Provides fast moving-window ("focal") and buffer-based extraction 
     for raster data using the 'terra' package. Automatically selects between 
     a 'C++' backend (via 'terra') and a Fast Fourier Transform ('FFT') backend 

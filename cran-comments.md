@@ -1,4 +1,4 @@
-## fastfocal 0.1.1 — CRAN submission
+## fastfocal 0.1.2 — CRAN submission
 
 ### Test environments
 - Local: Windows 11 x64, R 4.5.1 (ucrt)
@@ -14,20 +14,21 @@
 
 ### Changes and policy compliance
 - Software/package names are single-quoted in Title/Description (‘FFT’, ‘C++’, ‘terra’).
-- Method references included in DESCRIPTION:
-  - Cooley & Tukey (1965) <doi:10.1090/S0025-5718-1965-0178586-1>
-  - Hijmans, R. J. (2024). ‘terra’ R package. <https://CRAN.R-project.org/package=terra>
+- References are cited in vignettes and documentation, not in DESCRIPTION.
 - Examples and vignettes:
-  - Use small, fast, executable snippets.
+  - Small and fast; heavy benchmark code disabled for CRAN checks.
   - Save and restore `par()` to avoid side effects.
   - No network access; no files written outside temp directories.
 - Functionality notes:
   - NA handling matches ‘terra’ (`na.rm`, `na.policy = "omit" | "all"`).
-  - `engine = "auto"` selects ‘C++’ or ‘FFT’ based on scale; optional padding to FFT-friendly sizes.
-  - Accepts matrix kernels to match `terra::focalMat()` exactly when needed.
+  - `engine = "auto"` selects ‘C++’ or ‘FFT’ depending on scale; optional FFT padding to avoid prime-factor slowdowns.
+  - Matrix kernels accepted, matching `terra::focalMat()` where needed.
 - Packaging:
   - UTF-8 encoding; no non-ASCII in code.
-  - `.Rbuildignore` includes `.github/` and `cran-comments.md`.
+  - `.Rbuildignore` excludes `.github/`, `cran-comments.md`, and `CITATION.cff`.
 
 ### Reverse dependencies
 - None.
+
+### Additional notes
+- CRAN URL (https://CRAN.R-project.org/package=fastfocal) currently returns 404 as expected; it will resolve once the package is published.

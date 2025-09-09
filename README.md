@@ -101,7 +101,7 @@ Or use the BibTeX entry:
 @software{wan_fastfocal_2025,
   author       = {Ho Yi Wan},
   title        = {fastfocal: A fast, energy-efficient R package for focal raster operations},
-  version      = {v0.1.1},
+  version      = {v0.1.2},
   year         = {2025},
   publisher    = {Zenodo},
   doi          = {10.5281/zenodo.17074691},
