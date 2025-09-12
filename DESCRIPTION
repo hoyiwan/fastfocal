@@ -1,6 +1,6 @@
 Package: fastfocal
 Type: Package
-Title: Fast Multi-Scale Raster Extraction and Moving Window Analysis with 'FFT'
+Title: Fast Multiscale Raster Extraction and Moving Window Analysis with FFT
 Version: 0.1.2
 Date: 2025-09-09
 Authors@R: 
@@ -10,11 +10,11 @@ Authors@R:
              comment = c(ORCID = "0000-0002-2146-8257")))
 Description: Provides fast moving-window ("focal") and buffer-based extraction 
     for raster data using the 'terra' package. Automatically selects between 
-    a 'C++' backend (via 'terra') and a Fast Fourier Transform ('FFT') backend 
-    depending on problem size. The 'FFT' backend supports sum and mean, while 
+    a 'C++' backend (via 'terra') and a Fast Fourier Transform (FFT) backend 
+    depending on problem size. The FFT backend supports sum and mean, while 
     other statistics (e.g., median, min, max, standard deviation) are handled 
     by the 'terra' backend. Supports multiple kernel types (e.g., circle, 
-    rectangle, gaussian), with 'NA' handling consistent with 'terra' via 
+    rectangle, gaussian), with NA handling consistent with 'terra' via 
     'na.rm' and 'na.policy'. Operates on 'SpatRaster' objects and returns 
     results with the same geometry.
 License: MIT + file LICENSE
@@ -34,7 +34,7 @@ Suggests:
     withr,
     spelling
 VignetteBuilder: knitr
-URL:https://hoyiwan.github.io/fastfocal/,https://github.com/hoyiwan/fastfocal,https://doi.org/10.5281/zenodo.17074691
+URL: https://hoyiwan.github.io/fastfocal/, https://github.com/hoyiwan/fastfocal, https://doi.org/10.5281/zenodo.17074691
 BugReports: https://github.com/hoyiwan/fastfocal/issues
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
