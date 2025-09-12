@@ -31,6 +31,7 @@ Suggests:
     knitr,
     rmarkdown,
     dplyr,
+    withr,
     spelling
 VignetteBuilder: knitr
 URL: https://hoyiwan.github.io/fastfocal/, https://github.com/hoyiwan/fastfocal

@@ -96,6 +96,7 @@ Use `fastextract()` to extract values at points and, optionally, within buffers 
 # Simulate some points
 pts <- vect(matrix(c(500,500, 1500,1500, 2500,2500), ncol=2, byrow=TRUE), type="points", crs=crs(r))
 
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
 par(mfrow = c(2, 2))
 plot(r[[1]], main = "NDVI");  plot(pts, add = TRUE, pch = 20, cex = 2)
 plot(r[[2]], main = "Slope"); plot(pts, add = TRUE, pch = 20, cex = 2)
@@ -122,6 +123,7 @@ f_circ <- fastfocal(r, d = 300, w = "circle",   fun = "mean")
 # Focal means using a gaussian window (300 m radius)
 f_gaus <- fastfocal(r, d = 300, w = "gaussian", fun = "mean")
 
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
 par(mfrow = c(3, 3), mar = c(2, 2, 2, 2))
 plot(r[[1]], main = "NDVI");  plot(f_circ[[1]], main = "NDVI - Circle");  plot(f_gaus[[1]], main = "NDVI - Gaussian")
 plot(r[[2]], main = "Slope"); plot(f_circ[[2]], main = "Slope - Circle"); plot(f_gaus[[2]], main = "Slope - Gaussian")
@@ -138,6 +140,7 @@ f_mean   <- fastfocal(r, d = 300, fun = "mean",   na.rm = TRUE)
 f_sd     <- fastfocal(r, d = 300, fun = "sd",     na.rm = TRUE)
 f_median <- fastfocal(r, d = 300, fun = "median", na.rm = TRUE)
 
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
 par(mfrow = c(2, 2))
 plot(r[[1]],       main = "NDVI")
 plot(f_mean[[1]],  main = "NDVI - Mean (300 m)")
@@ -164,6 +167,7 @@ pad_kernel <- function(k, pad = 2) {
   out
 }
 
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
 par(mfrow = c(3, 4), mar = c(2, 2, 2, 2))
 for (w in kernel_types) {
   k_raw <- fastfocal_weights(center_r, d = 150, w = w, normalize = FALSE)  # ~11x11 at 30 m
@@ -171,7 +175,6 @@ for (w in kernel_types) {
   k <- k_pad / max(k_pad, na.rm = TRUE)
   image(k, main = w, col = hcl.colors(20, "YlOrRd", rev = TRUE), zlim = c(0, 1), asp = 1, cex.main = 1.2)
 }
-par(mfrow = c(1, 1))
 ```
 
 ---

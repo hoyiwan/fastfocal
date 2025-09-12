@@ -5,6 +5,13 @@
 * Fix: Correct matrix orientation and final transpose in FFT path.
 * Perf: Auto-padding to next 5-smooth lengths (`2*3*5` factors) to avoid large-prime
   slowdowns in FFTs.
+* Rebuilt vignettes and refreshed documentation.
+* Fixed Rd markup (e.g., replaced `{terra}` with `\pkg{terra}`).
+* Removed non-ASCII characters from R sources and roxygen; math now uses Rd math (e.g., `\eqn{\sigma}`).
+* Vignettes now restore user graphics state:
+  - Added `oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)` in chunks that modify `par(...)`.
+  - Added `on.exit(layout(1), add = TRUE)` in chunks that use `layout(...)`.
+* No changes to `options()` or working directory in examples/vignettes.
 
 # fastfocal 0.1.1
 

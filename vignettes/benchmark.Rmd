@@ -66,6 +66,7 @@ names(rasters) <- as.character(raster_sizes)
 ## Quick peek
 
 ```{r}
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
 par(mfrow = c(2, 3), mar = c(2, 2, 3, 1))
 raster_labels <- paste0(raster_sizes, "x", raster_sizes)
 for (i in seq_along(rasters)) {
@@ -157,6 +158,8 @@ summary_df <- df %>%
     levels = paste0(sort(unique(df$raster_size)), "x", sort(unique(df$raster_size)))
   ))
 
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
+on.exit(layout(1), add = TRUE)                                    
 layout(matrix(1:6, nrow = 2, byrow = TRUE))
 par(mar = c(4, 4, 3, 1))
 cols <- c("fastfocal" = "#0072B2", "terra" = "#D55E00")
@@ -221,6 +224,7 @@ cat("Max difference :", round(max_diff, 6), "\n")
 ### Visual comparison
 
 ```{r}
+oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
 par(mfrow = c(2, 2), mar = c(2, 2, 3, 2))
 plot(test_r,   main = "Original", col = terrain.colors(20))
 plot(r_terra,  main = "terra::focal (500 m)", col = terrain.colors(20))

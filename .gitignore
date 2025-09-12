@@ -18,6 +18,8 @@ Thumbs.db
 src/*.o
 src/*.so
 src/*.dll
+benchmark_chunks/
+
 
 # Vignette outputs (keep sources under vignettes/)
 vignettes/*.html

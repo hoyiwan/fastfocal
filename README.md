@@ -124,6 +124,6 @@ hoyiwan@gmail.com
 
 ---
 
-## Acknowledgments
+## Purpose
 
 Built to support large-scale ecological analysis, high-performance raster processing, and reproducible landscape research workflows.
