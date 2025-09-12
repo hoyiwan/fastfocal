@@ -9,7 +9,7 @@ fastfocal_weights(x, d, w = "circle", normalize = TRUE, plot = FALSE)
 \arguments{
 \item{x}{SpatRaster (used for resolution; assumes square pixels).}
 
-\item{d}{numeric. Radius in map units for most kernels; \strong{sigma} (σ) in map units for "gaussian"/"Gauss".}
+\item{d}{numeric. Radius in map units for most kernels; \strong{sigma} in map units for "gaussian"/"Gauss".}
 
 \item{w}{character. One of:
 "rectangle","circle","circular","gaussian","Gauss","pareto","idw",
@@ -25,7 +25,7 @@ numeric matrix of weights.
 \description{
 Builds an unnormalized (or normalized) kernel from map units.
 Circle uses a center-distance rule (include if center <= d).
-\strong{Gaussian interprets d as sigma (σ) in map units and truncates at 3σ},
+\strong{Gaussian interprets d as sigma in map units and truncates at 3 sigma},
 matching terra::focalMat(..., type = "Gauss").
 }
 \examples{
@@ -37,9 +37,9 @@ Kc <- fastfocal_weights(r, d = 2, w = "circle", normalize = TRUE)
 dim(Kc)            # 5 x 5
 round(sum(Kc), 6)  # ~1
 
-# Gaussian: d is sigma (σ) in map units, truncated at 3σ
+# Gaussian: d is sigma in map units, truncated at 3 sigmas
 Kg <- fastfocal_weights(r, d = 1, w = "gaussian", normalize = TRUE)
-dim(Kg)            # 7 x 7 (since 2*ceil(3*σ) + 1)
+dim(Kg)            # 7 x 7 (since 2*ceil(3*sigma) + 1)
 round(sum(Kg), 6)  # ~1
 
 # \donttest{

@@ -10,3 +10,4 @@
 ^CRAN-SUBMISSION$
 ^\.github$
 ^CITATION\.cff$
+^benchmark_chunks$

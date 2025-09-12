@@ -2,11 +2,11 @@
 #'
 #' Builds an unnormalized (or normalized) kernel from map units.
 #' Circle uses a center-distance rule (include if center <= d).
-#' **Gaussian interprets d as sigma (σ) in map units and truncates at 3σ**,
+#' **Gaussian interprets d as sigma in map units and truncates at 3 sigma**,
 #' matching terra::focalMat(..., type = "Gauss").
 #'
 #' @param x SpatRaster (used for resolution; assumes square pixels).
-#' @param d numeric. Radius in map units for most kernels; **sigma** (σ) in map units for "gaussian"/"Gauss".
+#' @param d numeric. Radius in map units for most kernels; **sigma** in map units for "gaussian"/"Gauss".
 #' @param w character. One of:
 #'   "rectangle","circle","circular","gaussian","Gauss","pareto","idw",
 #'   "exponential","triangular","cosine","logistic","cauchy","quartic","epanechnikov".
@@ -24,9 +24,9 @@
 #' dim(Kc)            # 5 x 5
 #' round(sum(Kc), 6)  # ~1
 #'
-#' # Gaussian: d is sigma (σ) in map units, truncated at 3σ
+#' # Gaussian: d is sigma in map units, truncated at 3 sigmas
 #' Kg <- fastfocal_weights(r, d = 1, w = "gaussian", normalize = TRUE)
-#' dim(Kg)            # 7 x 7 (since 2*ceil(3*σ) + 1)
+#' dim(Kg)            # 7 x 7 (since 2*ceil(3*sigma) + 1)
 #' round(sum(Kg), 6)  # ~1
 #'
 #' # \donttest{
@@ -68,7 +68,7 @@ fastfocal_weights <- function(x, d, w = "circle", normalize = TRUE, plot = FALSE
     mat[dist <= d] <- 1
     
   } else if (w %in% c("gaussian","Gauss")) {
-    # d is sigma; no hard cutoff other than the 3σ window we built
+    # d is sigma; no hard cutoff other than the 3 sigma window we built
     sigma <- d
     mat <- exp(-(dist^2) / (2 * sigma^2))
     

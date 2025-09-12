@@ -34,9 +34,8 @@ Suggests:
     withr,
     spelling
 VignetteBuilder: knitr
-URL: https://hoyiwan.github.io/fastfocal/, https://github.com/hoyiwan/fastfocal
+URL:https://hoyiwan.github.io/fastfocal/,https://github.com/hoyiwan/fastfocal,https://doi.org/10.5281/zenodo.17074691
 BugReports: https://github.com/hoyiwan/fastfocal/issues
-DOI: 10.5281/zenodo.17074691
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
