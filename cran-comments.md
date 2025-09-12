@@ -13,7 +13,7 @@
 - R-hub: 0 errors | 0 warnings | 0 notes (all selected platforms)
 
 ### Changes and policy compliance
-- Software/package names are single-quoted in Title/Description (‘FFT’, ‘C++’, ‘terra’).
+- Software/package names are single-quoted in the Description as per CRAN policy (e.g., ‘terra’). The Title avoids quotes.
 - References are cited in vignettes and documentation, not in DESCRIPTION.
 - Examples and vignettes:
   - Small and fast; heavy benchmark code disabled for CRAN checks.
