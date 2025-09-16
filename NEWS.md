@@ -1,4 +1,4 @@
-# fastfocal 0.1.2
+# fastfocal 0.1.3
 
 * Fix: NA-semantic parity with `terra::focal()` under `na.rm=TRUE/FALSE` and
   `na.policy="omit"`; removed speckle artifacts at NA boundaries.

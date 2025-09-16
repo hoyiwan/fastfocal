@@ -1,4 +1,4 @@
-## fastfocal 0.1.2 — CRAN submission
+## fastfocal 0.1.3 — CRAN submission
 
 ### Test environments
 - Local: Windows 11 x64, R 4.5.1 (ucrt)
