@@ -84,7 +84,7 @@ fastfocal <- function(
     if (!fun %in% c("mean","sum")) {
       engine <- "cpp"
     } else {
-      engine <- .ff_choose_engine_smart(x, d, w = w, fun = fun)
+      engine <- choose_engine_smart(x, d, w = w, fun = fun, pad = pad)
     }
   }
   if (identical(engine, "fft") && !fun %in% c("mean","sum")) {
@@ -139,11 +139,6 @@ fastfocal <- function(
   
   out <- terra::focal(x, w = kernel_cpp, fun = fun_eval, na.rm = na.rm, ...)
   
-  # Emulate na.policy center handling (terra always leaves NA when center is NA).
-  if (identical(na.policy, "omit")) {
-    center_na <- is.na(terra::values(x))
-    v <- terra::values(out); v[center_na] <- NA_real_; terra::values(out) <- v
-  }
   out
 }
 
@@ -157,20 +152,6 @@ fastfocal <- function(
          max    = base::max,
          sd     = stats::sd,
          median = stats::median)
-}
-
-.ff_choose_engine_smart <- function(x, d, w, fun) {
-  # Non-mean/sum always use C++.
-  if (!fun %in% c("mean","sum")) return("cpp")
-  
-  # simple heuristic: if footprint >= 15x15 -> FFT, else C++
-  if (is.matrix(w)) {
-    kr <- nrow(w); kc <- ncol(w)
-  } else {
-    K  <- fastfocal_weights(x, d, w, normalize = FALSE, plot = FALSE)
-    kr <- nrow(K); kc <- ncol(K)
-  }
-  if ((kr * kc) >= 225L) "fft" else "cpp"
 }
 
 .ff_kernel_matrix <- function(x, d, w) {

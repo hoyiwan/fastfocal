@@ -1,59 +1,65 @@
-#' Choose computation engine (internal)
+#' Select the computation engine ("cpp" vs "fft") for fastfocal()
 #'
-#' Heuristic to select "fft" vs "cpp" based on raster size, kernel size,
-#' and padding cost. Only `mean` and `sum` consider the FFT path. The kernel
-#' size is estimated from `d / res(x)` without building the kernel.
+#' Heuristic (pixel-only, resolution-independent):
+#' - Only additive reducers (\code{fun} in \code{c("mean","sum")}) are eligible for FFT.
+#' - Let \eqn{r_\mathrm{cells}} be the kernel radius in cells (derived from \code{w} or \code{d/res(x)}).
+#'   If \eqn{r_\mathrm{cells} \le 14}, use \code{"cpp"}.
+#' - Otherwise (\eqn{r_\mathrm{cells} \ge 15}), compute the padded linear-convolution grid:
+#'   \deqn{\textit{want\_nr} = n_\mathrm{row} + (2r_\mathrm{cells}+1) - 1,\quad
+#'         \textit{want\_nc} = n_\mathrm{col} + (2r_\mathrm{cells}+1) - 1}
+#'   Then set \eqn{\textit{pad\_nr}}, \eqn{\textit{pad\_nc}} to the next 5-smooth lengths
+#'   when \code{pad == "auto"} (via \code{next_fast_len()}), otherwise leave as-is.
+#'   Switch to \code{"fft"} only if
+#'   \deqn{\textit{pad\_area} = \textit{pad\_nr}\times\textit{pad\_nc} \;>\; \max(16{,}000,\; 0.6\, n_\mathrm{row} n_\mathrm{col}).}
 #'
-#' @param x SpatRaster. Input raster.
-#' @param d numeric. Kernel radius/size in map units.
-#' @param w character. Window type name (e.g., "circle"); used only to estimate support size.
-#' @param fun character. Summary function; FFT considered only for `mean` and `sum`.
-#' @param pad character. "auto" pads to next 5-smooth lengths; "none" uses exact sizes.
-#' @param min_pixels_fft numeric. Minimum padded conv area to consider FFT (default 5e6).
-#' @param min_kernel_fft numeric. Minimum kernel support (cells) to consider FFT (default 81).
-#' @param max_pad_inflate numeric. Maximum padding inflation ratio (e.g., 1.25 allows +25%).
-#' @return "fft" or "cpp".
+#' Equality at thresholds stays on \code{"cpp"}.
+#'
+#' @param x   A \code{terra::SpatRaster}.
+#' @param d   Numeric. Window radius/size in map units (used only to derive cells when \code{w} is named).
+#' @param w   Character window name (e.g., \code{"circle"}) or a numeric kernel matrix; used to get the discrete footprint.
+#' @param fun Character. Summary function. Only \code{"mean"} and \code{"sum"} may use FFT.
+#' @param pad Character. \code{"auto"} pads each dimension to a 5-smooth length; \code{"none"} uses exact sizes.
+#'
+#' @return A length-1 character: \code{"cpp"} or \code{"fft"}.
 #' @keywords internal
 #' @noRd
-
-choose_engine_smart <- function(x, d, w = "circle", fun = "mean",
-                                pad = "auto",
-                                min_pixels_fft = 5e6,
-                                min_kernel_fft = 81,
-                                max_pad_inflate = 1.25) {
-  # Only mean/sum benefit from the FFT path here
-  if (!fun %in% c("mean", "sum")) return("cpp")
+choose_engine_smart <- function(x, d, w = "circle", fun = "mean", pad = "auto") {
+  # 1) Reducer gate --------------------------------------------------------
+  if (!fun %in% c("mean","sum")) return("cpp")
   
-  # Basic geometry
-  nr <- as.integer(terra::nrow(x)); if (!is.finite(nr) || nr <= 0) return("cpp")
-  nc <- as.integer(terra::ncol(x)); if (!is.finite(nc) || nc <= 0) return("cpp")
+  # 2) Validity guard ------------------------------------------------------
+  nr <- as.integer(terra::nrow(x)); nc <- as.integer(terra::ncol(x))
+  if (!is.finite(nr) || !is.finite(nc) || nr <= 0L || nc <= 0L) return("cpp")
+  resx <- terra::res(x)[1]
+  if (!is.finite(resx) || resx <= 0) return("cpp")
   
-  resv <- terra::res(x)[1]
-  if (!is.finite(resv) || resv <= 0) return("cpp")
-  
-  # Kernel size in cells (square box that contains the window)
-  rad <- max(1L, as.integer(ceiling(d / resv)))
-  kr  <- 2L * rad + 1L
-  kc  <- kr
-  
-  # Approximate support size: circle uses pi * r^2, others use full box
-  if (is.character(w) && w %in% c("circle", "circular")) {
-    k_support <- as.numeric(pi) * (rad ^ 2)
+  # 3) Discrete kernel geometry (respect aliases; NEVER normalize here) ---
+  if (is.matrix(w) || (is.numeric(w) && length(dim(w)) == 2L)) {
+    kr <- as.integer(nrow(w)); kc <- as.integer(ncol(w))
   } else {
-    k_support <- kr * kc
+    K  <- fastfocal_weights(x, d, w, normalize = FALSE, plot = FALSE)
+    kr <- as.integer(nrow(K)); kc <- as.integer(ncol(K))
   }
+  if (!is.finite(kr) || !is.finite(kc) || kr <= 0L || kc <= 0L) return("cpp")
+  r_cells <- (max(kr, kc) - 1L) %/% 2L
   
-  # Linear convolution sizes and padded sizes
-  want_nr <- nr + kr - 1L
-  want_nc <- nc + kc - 1L
+  # 4) Hard pixel-radius switch -------------------------------------------
+  if (r_cells <= 14L) return("cpp")  # ≤14 px radius -> C++
+  
+  # 5) Padded convolution grid area ---------------------------------------
+  kw <- 2L * r_cells + 1L
+  want_nr <- nr + kw - 1L
+  want_nc <- nc + kw - 1L
   pad_nr  <- if (identical(pad, "auto")) next_fast_len(want_nr) else want_nr
   pad_nc  <- if (identical(pad, "auto")) next_fast_len(want_nc) else want_nc
+  pad_area <- as.numeric(pad_nr) * as.numeric(pad_nc)
   
-  pad_ratio <- (pad_nr * pad_nc) / (want_nr * want_nc)
+  # 6) Adaptive size gate --------------------------------------------------
+  ncell <- as.numeric(nr) * as.numeric(nc)
+  T <- max(16000.0, 0.6 * ncell)  # small absolute floor + relative term
   
-  # Thresholds for "large enough" and "padding is friendly"
-  big_enough <- (want_nr * want_nc) >= min_pixels_fft || k_support >= min_kernel_fft
-  friendly   <- pad_ratio <= max_pad_inflate
+  if (!is.finite(pad_area) || pad_area <= T) return("cpp")
   
-  if (big_enough && friendly) "fft" else "cpp"
+  # 7) Otherwise, FFT ------------------------------------------------------
+  "fft"
 }
