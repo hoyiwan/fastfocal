@@ -2,9 +2,17 @@
 
 This release represents the version used to generate all benchmark results and figures reported in the forthcoming manuscript.
 
-Improvements
-- Performance optimizations
+### Improvements
+- Performance optimizations.
 - Refined core routines for faster runtime in typical benchmark scenarios.
+- Vignettes: explicit graphics-state resets per CRAN guidance:
+  - Save and restore `par()` with `oldpar <- par(no.readonly = TRUE); par(oldpar)` around changes.
+  - Reset `layout()` with `layout(1)` when used.
+
+### Citation
+If using fastfocal in academic work, cite this version as:
+
+Wan, H.Y. (2025). fastfocal v0.1.3. GitHub. https://github.com/yourrepo/fastfocal/releases/tag/v0.1.3
 
 # fastfocal 0.1.2
 
@@ -33,8 +41,3 @@ Improvements
 # fastfocal 0.1.0
 
 * Internal development version (not submitted to CRAN).
-
-# Citation
-- If using fastfocal in academic work, cite this version as:
-
-Wan, H.Y. (2025). fastfocal v0.1.3. GitHub. https://github.com/yourrepo/fastfocal/releases/tag/v0.1.3

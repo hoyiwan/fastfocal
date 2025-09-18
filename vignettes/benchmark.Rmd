@@ -1,6 +1,6 @@
 ---
 title: "Benchmarking fastfocal"
-subtitle: "Version 0.1.2 (2025)"
+subtitle: "Version 0.1.3 (2025)"
 author: "Ho Yi Wan"
 output: rmarkdown::html_vignette
 vignette: >
@@ -66,12 +66,13 @@ names(rasters) <- as.character(raster_sizes)
 ## Quick peek
 
 ```{r}
-oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
+oldpar <- par(no.readonly = TRUE)
 par(mfrow = c(2, 3), mar = c(2, 2, 3, 1))
 raster_labels <- paste0(raster_sizes, "x", raster_sizes)
 for (i in seq_along(rasters)) {
   plot(rasters[[i]], main = paste("Raster:", raster_labels[i]))
 }
+par(oldpar)
 ```
 
 ---
@@ -146,51 +147,55 @@ stopifnot(all(c("method","raster_size","d","time") %in% names(df)))
 ## Summarize and visualize
 
 ```{r}
-summary_df <- df %>%
-  group_by(method, raster_size, d) %>%
-  summarize(
-    mean_time = mean(time, na.rm = TRUE),
-    se_time = sd(time, na.rm = TRUE) / sqrt(sum(is.finite(time))),
-    .groups = "drop"
-  ) %>%
-  mutate(raster_label = factor(
-    paste0(raster_size, "x", raster_size),
-    levels = paste0(sort(unique(df$raster_size)), "x", sort(unique(df$raster_size)))
-  ))
+# --- summary ---
+summary_df <- df %>% 
+  group_by(method, raster_size, d) %>% 
+  summarize( 
+    mean_time = mean(time, na.rm = TRUE), 
+    se_time = sd(time, na.rm = TRUE) / sqrt(sum(is.finite(time))), 
+    .groups = "drop" 
+  ) %>% 
+  mutate(raster_label = factor( 
+    paste0(raster_size, "x", raster_size), 
+    levels = paste0(sort(unique(df$raster_size)), "x", sort(unique(df$raster_size))) 
+  )) 
 
-oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
-on.exit(layout(1), add = TRUE)                                    
-layout(matrix(1:6, nrow = 2, byrow = TRUE))
-par(mar = c(4, 4, 3, 1))
-cols <- c("fastfocal" = "#0072B2", "terra" = "#D55E00")
-raster_labels <- levels(summary_df$raster_label)
+oldpar <- par(no.readonly = TRUE)
 
-for (label in raster_labels) {
-  subdf <- subset(summary_df, raster_label == label)
-  if (nrow(subdf) == 0) next
-  plot(NA,
-       xlim = range(subdf$d),
-       ylim = range(subdf$mean_time + subdf$se_time, na.rm = TRUE),
-       xlab = "Kernel size (m)", ylab = "Mean time (s)",
-       main = paste("Raster:", label))
-  methods <- unique(subdf$method)
-  for (m in methods) {
-    data <- subdf[subdf$method == m, ]
-    lines(data$d, data$mean_time, col = cols[m], type = "b", pch = 16)
-    max_time <- max(subdf$mean_time, na.rm = TRUE)
-    min_se <- 0.001 * max_time
-    se <- ifelse(is.na(data$se_time), 0, data$se_time)
-    se_final <- pmax(se, min_se)
-    suppressWarnings(arrows(
+layout(matrix(1:6, nrow = 2, byrow = TRUE)) 
+par(mar = c(4, 4, 3, 1)) 
+cols <- c("fastfocal" = "#0072B2", "terra" = "#D55E00") 
+raster_labels <- levels(summary_df$raster_label) 
+
+for (label in raster_labels) { 
+  subdf <- subset(summary_df, raster_label == label) 
+  if (nrow(subdf) == 0) next 
+  plot(NA, 
+       xlim = range(subdf$d), 
+       ylim = range(subdf$mean_time + subdf$se_time, na.rm = TRUE), 
+       xlab = "Kernel size (m)", ylab = "Mean time (s)", 
+       main = paste("Raster:", label)) 
+  methods <- unique(subdf$method) 
+  for (m in methods) { 
+    data <- subdf[subdf$method == m, ] 
+    lines(data$d, data$mean_time, col = cols[m], type = "b", pch = 16) 
+    max_time <- max(subdf$mean_time, na.rm = TRUE) 
+    min_se <- 0.001 * max_time 
+    se <- ifelse(is.na(data$se_time), 0, data$se_time) 
+    se_final <- pmax(se, min_se) 
+    suppressWarnings(arrows( 
       x0 = data$d,
       y0 = data$mean_time - se_final,
-      x1 = data$d,
-      y1 = data$mean_time + se_final,
-      angle = 90, code = 3, length = 0.05, col = cols[m]
-    ))
-  }
-  legend("topleft", legend = methods, col = cols[methods], pch = 16, lty = 1, bty = "n")
+      x1 = data$d, 
+      y1 = data$mean_time + se_final, 
+      angle = 90, code = 3, length = 0.05, col = cols[m] 
+    )) 
+  } 
+  legend("topleft", legend = methods, col = cols[methods], pch = 16, lty = 1, bty = "n") 
 }
+layout(1)
+par(oldpar)
+
 ```
 
 ---
@@ -224,12 +229,13 @@ cat("Max difference :", round(max_diff, 6), "\n")
 ### Visual comparison
 
 ```{r}
-oldpar <- par(no.readonly = TRUE); on.exit(par(oldpar), add = TRUE)
+oldpar <- par(no.readonly = TRUE)
 par(mfrow = c(2, 2), mar = c(2, 2, 3, 2))
 plot(test_r,   main = "Original", col = terrain.colors(20))
 plot(r_terra,  main = "terra::focal (500 m)", col = terrain.colors(20))
 plot(r_fast,   main = "fastfocal (500 m)", col = terrain.colors(20))
 plot(r_diff,   main = "Absolute difference", col = hcl.colors(20, "YlOrRd", rev = TRUE))
+par(oldpar)
 ```
 
 ---
@@ -245,7 +251,7 @@ sessionInfo()
 To cite the package:
 
 Wan, H. Y. (2025). *fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT*. 
-R package version 0.1.2. Zenodo. https://doi.org/10.5281/zenodo.17074691
+R package version 0.1.3. Zenodo. https://doi.org/10.5281/zenodo.17074691
 
 ```{r}
 citation("fastfocal")

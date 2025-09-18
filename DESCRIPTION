@@ -1,7 +1,7 @@
 Package: fastfocal
 Type: Package
 Title: Fast Multiscale Raster Extraction and Moving Window Analysis with FFT
-Version: 0.1.2
+Version: 0.1.3
 Date: 2025-09-09
 Authors@R: 
     c(person(given = c("Ho", "Yi"), family = "Wan",
