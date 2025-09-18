@@ -11,3 +11,5 @@
 ^\.github$
 ^CITATION\.cff$
 ^benchmark_chunks$
+^_pkgdown\.yml$
+^pkgdown$
