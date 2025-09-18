@@ -67,7 +67,6 @@ pts <- vect(data.frame(x = c(500, 1500), y = c(500, 2500)), geom = c("x", "y"), 
 result <- fastextract(r, pts, d = 500, fun = "mean")
 print(result)
 ```
-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAbElEQVR4Xs2RQQrAMAgEfZgf7W9LAguybljJpR3wEse5JOL3ZObDb4x1loDhHbBOFU6i2Ddnw2KNiXcdAXygJlwE8OFVBHDgKrLgSInN4WMe9iXiqIVsTMjH7z/GhNTEibOxQswcYIWYOR/zAjBJfiXh3jZ6AAAAAElFTkSuQmCC
 ---
 
 ## Vignettes
