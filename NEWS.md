@@ -12,7 +12,7 @@ This release represents the version used to generate all benchmark results and f
 ### Citation
 If using fastfocal in academic work, cite this version as:
 
-Wan, H.Y. (2025). fastfocal v0.1.3. GitHub. https://github.com/yourrepo/fastfocal/releases/tag/v0.1.3
+Wan, H.Y. (2025). fastfocal v0.1.3. GitHub. https://github.com/hoyiwan/fastfocal/releases/tag/v0.1.3
 
 # fastfocal 0.1.2
 
