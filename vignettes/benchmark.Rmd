@@ -1,6 +1,6 @@
 ---
 title: "Benchmarking fastfocal"
-subtitle: "Version 0.1.3 (2025)"
+subtitle: "Version 0.1.4 (2025)"
 author: "Ho Yi Wan"
 output: rmarkdown::html_vignette
 vignette: >
@@ -251,7 +251,7 @@ sessionInfo()
 To cite the package:
 
 Wan, H. Y. (2025). *fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with FFT*. 
-R package version 0.1.3. Zenodo. https://doi.org/10.5281/zenodo.17074691
+R package version 0.1.4. Zenodo. https://doi.org/10.5281/zenodo.17074691
 
 ```{r}
 citation("fastfocal")

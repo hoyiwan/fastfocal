@@ -12,13 +12,13 @@
 
 ## Installation
 
-Once accepted on CRAN, you will be able to install the stable release with:
+You can install the stable version via CRAN:
 
 ```r
 install.packages("fastfocal")
 ```
 
-Until then, you can install the development version from GitHub:
+You can install the development version from GitHub:
 
 ```r
 # install.packages("remotes")
@@ -92,15 +92,15 @@ This package is licensed under the **MIT License** (see the [LICENSE](LICENSE) f
 
 If you use `fastfocal` in published work, please cite it as:
 
-> Ho Yi Wan (2025). *fastfocal: A fast, energy-efficient R package for focal raster operations*. Version v0.1.1. Zenodo. https://doi.org/10.5281/zenodo.17074691
+> Ho Yi Wan (2025). *fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R*. Version v0.1.4. Zenodo. https://doi.org/10.5281/zenodo.17074691
 
 Or use the BibTeX entry:
 
 ```bibtex
 @software{wan_fastfocal_2025,
   author       = {Ho Yi Wan},
-  title        = {fastfocal: A fast, energy-efficient R package for focal raster operations},
-  version      = {v0.1.3},
+  title        = {fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R},
+  version      = {v0.1.4},
   year         = {2025},
   publisher    = {Zenodo},
   doi          = {10.5281/zenodo.17074691},

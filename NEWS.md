@@ -1,6 +1,12 @@
 # fastfocal 0.1.4
 
-Correct typos in URLs
+Fixed typos in URLs.
+
+### Citation
+If using fastfocal in academic work, cite this version as:
+
+Wan, H.Y. (2025). fastfocal: Fast Multi-scale Raster Extraction and Moving Window Analysis with Fast Fourier Transform (FFT) in R. Version v0.1.4. Zenodo. https://doi.org/10.5281/zenodo.17074691
+
 
 # fastfocal 0.1.3
 
@@ -13,10 +19,6 @@ This release represents the version used to generate all benchmark results and f
   - Save and restore `par()` with `oldpar <- par(no.readonly = TRUE); par(oldpar)` around changes.
   - Reset `layout()` with `layout(1)` when used.
 
-### Citation
-If using fastfocal in academic work, cite this version as:
-
-Wan, H.Y. (2025). fastfocal v0.1.3. GitHub. https://github.com/hoyiwan/fastfocal/releases/tag/v0.1.3
 
 # fastfocal 0.1.2
 
