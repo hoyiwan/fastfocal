@@ -1,3 +1,5 @@
+# fastfocal 0.1.4
+
 # fastfocal 0.1.3
 
 This release represents the version used to generate all benchmark results and figures reported in the forthcoming manuscript.
